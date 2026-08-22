@@ -241,6 +241,28 @@ SizedBox(
     ),
   ),
 ),
+            const SizedBox(height: 12),
+
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: engine.careerPlayer == null
+        ? null
+        : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TrainingScreen(
+                  engine: engine,
+                ),
+              ),
+            );
+          },
+    child: const Text(
+      'TRENING',
+    ),
+  ),
+),
 
             // ==================================================
             // INFORMACJE O ZAWODNIKU
