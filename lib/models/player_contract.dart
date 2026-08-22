@@ -1,17 +1,42 @@
 class PlayerContract {
+  // ==========================================================
+  // KLUB
+  // ==========================================================
+
   String clubId;
+
+  // ==========================================================
+  // KONTRAKT
+  // ==========================================================
 
   int yearsRemaining;
 
+  // Pensja tygodniowa
   double weeklySalary;
 
+  // ==========================================================
+  // WARTOŚĆ ZAWODNIKA
+  // ==========================================================
+
   double marketValue;
+
+  // ==========================================================
+  // NUMER I STATUS W DRUŻYNIE
+  // ==========================================================
 
   int squadNumber;
 
   String squadStatus;
 
+  // ==========================================================
+  // ZAUFANIE TRENERA
+  // ==========================================================
+
   int managerTrust;
+
+  // ==========================================================
+  // KONSTRUKTOR
+  // ==========================================================
 
   PlayerContract({
     required this.clubId,
@@ -19,33 +44,78 @@ class PlayerContract {
     required this.weeklySalary,
     required this.marketValue,
     required this.squadNumber,
-    SquadStatus.reserves,
+    required this.squadStatus,
     this.managerTrust = 50,
   });
-}
 
-import 'squad_status.dart';
+  // ==========================================================
+  // CZY KONTRAKT JEST AKTYWNY?
+  // ==========================================================
 
-class PlayerContract {
-  String clubId;
+  bool get isActive {
+    return yearsRemaining > 0;
+  }
 
-  int yearsRemaining;
-  double weeklySalary;
-  double marketValue;
+  // ==========================================================
+  // ROCZNA PENSJA
+  // ==========================================================
 
-  int squadNumber;
+  double get yearlySalary {
+    return weeklySalary * 52;
+  }
 
-  SquadStatus squadStatus;
+  // ==========================================================
+  // ZMIANA ZAUFANIA TRENERA
+  // ==========================================================
 
-  int managerTrust;
+  void changeManagerTrust(int amount) {
+    managerTrust =
+        (managerTrust + amount).clamp(0, 100);
+  }
 
-  PlayerContract({
-    required this.clubId,
-    required this.yearsRemaining,
-    required this.weeklySalary,
-    required this.marketValue,
-    required this.squadNumber,
-    this.squadStatus = SquadStatus.reserves,
-    this.managerTrust = 50,
-  });
+  // ==========================================================
+  // ZMIANA STATUSU
+  // ==========================================================
+
+  void changeSquadStatus(String newStatus) {
+    squadStatus = newStatus;
+  }
+
+  // ==========================================================
+  // ZMIANA NUMERU
+  // ==========================================================
+
+  void changeSquadNumber(int newNumber) {
+    if (newNumber < 1 || newNumber > 99) {
+      return;
+    }
+
+    squadNumber = newNumber;
+  }
+
+  // ==========================================================
+  // ZMIANA WARTOŚCI RYNKOWEJ
+  // ==========================================================
+
+  void updateMarketValue(double newValue) {
+    marketValue = newValue.clamp(0, double.infinity);
+  }
+
+  // ==========================================================
+  // ZMIANA PENSJI
+  // ==========================================================
+
+  void updateSalary(double newSalary) {
+    weeklySalary = newSalary.clamp(0, double.infinity);
+  }
+
+  // ==========================================================
+  // ZMNIEJSZENIE KONTRAKTU
+  // ==========================================================
+
+  void reduceContractYear() {
+    if (yearsRemaining > 0) {
+      yearsRemaining--;
+    }
+  }
 }
