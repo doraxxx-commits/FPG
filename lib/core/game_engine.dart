@@ -120,6 +120,69 @@ class GameEngine {
   }
 
   // ==========================================================
+  // KROK 31
+  // INFORMACJE O UDZIALE ZAWODNIKA W MECZU
+  // ==========================================================
+
+  // Czy zawodnik może wystąpić w meczu.
+  bool get careerPlayerCanPlay {
+    if (careerPlayer == null) {
+      return false;
+    }
+
+    final player = careerPlayer!;
+
+    // Bez klubu nie można grać.
+    if (player.clubId == null) {
+      return false;
+    }
+
+    // Aktualizacja decyzji trenera.
+    player.updateMatchStatus();
+
+    return player.canPlayMatch;
+  }
+
+  // ==========================================================
+  // KROK 31
+  // CZY ZAWODNIK JEST W KADRZE MECZOWEJ
+  // ==========================================================
+
+  bool get careerPlayerInMatchSquad {
+    if (careerPlayer == null) {
+      return false;
+    }
+
+    return careerPlayer!.inMatchSquad;
+  }
+
+  // ==========================================================
+  // KROK 31
+  // CZY ZAWODNIK JEST W PODSTAWOWYM SKŁADZIE
+  // ==========================================================
+
+  bool get careerPlayerIsStarter {
+    if (careerPlayer == null) {
+      return false;
+    }
+
+    return careerPlayer!.isRegularStarter;
+  }
+
+  // ==========================================================
+  // KROK 31
+  // STATUS MECZOWY ZAWODNIKA
+  // ==========================================================
+
+  String get careerPlayerMatchStatus {
+    if (careerPlayer == null) {
+      return 'Brak zawodnika';
+    }
+
+    return careerPlayer!.squadStatus;
+  }
+
+  // ==========================================================
   // MECZE
   // ==========================================================
 
