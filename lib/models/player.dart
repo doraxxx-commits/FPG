@@ -12,7 +12,52 @@ class Player {
   int age;
   PlayerPosition position;
 
-  int overall;
+  int get overall {
+  switch (position) {
+    case PlayerPosition.goalkeeper:
+      return (
+        physical * 0.30 +
+        defending * 0.30 +
+        passing * 0.20 +
+        dribbling * 0.20
+      ).round();
+
+    case PlayerPosition.defender:
+      return (
+        defending * 0.40 +
+        physical * 0.25 +
+        passing * 0.20 +
+        pace * 0.15
+      ).round();
+
+    case PlayerPosition.midfielder:
+      return (
+        passing * 0.30 +
+        dribbling * 0.25 +
+        shooting * 0.20 +
+        physical * 0.15 +
+        pace * 0.10
+      ).round();
+
+    case PlayerPosition.winger:
+      return (
+        dribbling * 0.30 +
+        pace * 0.25 +
+        shooting * 0.20 +
+        passing * 0.15 +
+        physical * 0.10
+      ).round();
+
+    case PlayerPosition.striker:
+      return (
+        shooting * 0.40 +
+        dribbling * 0.25 +
+        physical * 0.20 +
+        pace * 0.15
+      ).round();
+  }
+}
+  
   int potential;
 
   int pace;
