@@ -112,7 +112,39 @@ class _FPGHomePageState extends State<FPGHomePage> {
             ),
 
             const SizedBox(height: 20),
+const Text(
+  'NAJBLIŻSZA KOLEJKA',
+  style: TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+  ),
+),
 
+const SizedBox(height: 10),
+
+...engine.roundOneFixtures.map((fixture) {
+  final home = engine.clubs.firstWhere(
+    (club) => club.id == fixture.homeClubId,
+  );
+
+  final away = engine.clubs.firstWhere(
+    (club) => club.id == fixture.awayClubId,
+  );
+
+  return Card(
+    child: ListTile(
+      title: Text(
+        '${home.name}  vs  ${away.name}',
+      ),
+      subtitle: Text(
+        'Kolejka ${fixture.round}',
+      ),
+    ),
+  );
+}),
+
+const SizedBox(height: 20),
+            
             const Text(
               'EKSTRAKLASA',
               style: TextStyle(
