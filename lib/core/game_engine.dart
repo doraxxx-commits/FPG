@@ -205,11 +205,27 @@ class GameEngine {
   // ==========================================================
 
   void recoverPlayer() {
+  void updatePlayerForm() {
   if (careerPlayer == null) {
     return;
   }
 
   final player = careerPlayer!;
+
+  if (player.fatigue >= 80) {
+    player.form =
+        (player.form - 2)
+            .clamp(0, 100);
+  } else if (player.fatigue >= 60) {
+    player.form =
+        (player.form - 1)
+            .clamp(0, 100);
+  } else if (player.fatigue <= 25) {
+    player.form =
+        (player.form + 1)
+            .clamp(0, 100);
+  }
+}
 
   final recovery = player.fatigue >= 70
       ? 5
