@@ -9,6 +9,7 @@ import '../simulation/league_engine.dart';
 import '../simulation/match_engine.dart';
 import 'game_state.dart';
 import '../models/player_career.dart';
+import 'training_engine.dart';
 
 class GameEngine {
   final GameState state;
@@ -23,7 +24,7 @@ class GameEngine {
   late final List<Fixture> fixtures;
 
   late final List<Fixture> fixtures;
-
+  
   PlayerCareer? careerPlayer;
 
   void createPlayer({
@@ -101,6 +102,33 @@ class GameEngine {
           fixture.month == state.month &&
           fixture.day == state.day) {
         playFixture(fixture);
+     
+      final TrainingEngine trainingEngine =
+    TrainingEngine();
+
+        TrainingResult trainPlayer(
+  TrainingType type,
+) {
+  if (careerPlayer == null) {
+    throw StateError(
+      'Brak aktywnego zawodnika.',
+    );
+  }
+
+  final player = careerPlayer!;
+
+  final result = trainingEngine.train(
+    player,
+    type,
+  );
+
+  player.fatigue = (
+    player.fatigue +
+    result.fatigue
+  ).clamp(0, 100);
+
+  return result;
+
       }
     }
   }
