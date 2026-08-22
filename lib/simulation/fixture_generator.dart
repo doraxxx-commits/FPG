@@ -13,7 +13,6 @@ class FixtureGenerator {
 
     final teams = List<Club>.from(clubs);
 
-    // Przy nieparzystej liczbie drużyn dodajemy "wolny termin".
     if (teams.length.isOdd) {
       teams.add(
         Club(
@@ -32,29 +31,31 @@ class FixtureGenerator {
 
     final rotatingTeams = List<Club>.from(teams);
 
-    // Pierwsza runda — każdy z każdym.
     for (int round = 0; round < rounds; round++) {
       for (int i = 0; i < teamCount ~/ 2; i++) {
         final home = rotatingTeams[i];
         final away = rotatingTeams[teamCount - 1 - i];
 
         if (home.id != 'BYE' && away.id != 'BYE') {
+          final matchDay = 8 + (round * 7);
+
           fixtures.add(
             Fixture(
               round: round + 1,
               homeClubId: home.id,
               awayClubId: away.id,
+              year: 2026,
+              month: 7,
+              day: matchDay,
             ),
           );
         }
       }
 
-      // Obrót wszystkich drużyn poza pierwszą.
       final last = rotatingTeams.removeLast();
       rotatingTeams.insert(1, last);
     }
 
-    // Druga runda — rewanże.
     final firstRoundFixtures = List<Fixture>.from(fixtures);
 
     for (final fixture in firstRoundFixtures) {
@@ -63,6 +64,9 @@ class FixtureGenerator {
           round: fixture.round + rounds,
           homeClubId: fixture.awayClubId,
           awayClubId: fixture.homeClubId,
+          year: 2026,
+          month: 9,
+          day: fixture.day,
         ),
       );
     }
