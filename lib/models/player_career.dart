@@ -1,5 +1,7 @@
 import 'player.dart';
 
+import 'player_contract.dart';
+
 class PlayerCareer {
   final String id;
 
@@ -35,6 +37,8 @@ class PlayerCareer {
   String? clubId;
 
   int shirtNumber;
+
+  PlayerContract? contract;
 
   int careerGoals;
   int careerAssists;
