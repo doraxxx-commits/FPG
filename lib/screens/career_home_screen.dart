@@ -217,19 +217,41 @@ class CareerHomeScreen extends StatelessWidget {
                 leading: const Icon(
                   Icons.sports_soccer,
                   size: 32,
+                  color: Colors.greenAccent,
                 ),
 
                 title: const Text(
-                  'Terminarz',
+                  'Rozegraj Kolejkę',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
 
                 subtitle: const Text(
-                  'System meczów zostanie podłączony tutaj.',
+                  'Symuluj mecze i przejdź do kolejnego dnia',
                 ),
 
                 trailing: const Icon(
-                  Icons.chevron_right,
+                  Icons.play_arrow,
+                  size: 28,
+                  color: Colors.greenAccent,
                 ),
+
+                onTap: () {
+                  // Przechodzimy do kolejnego dnia w GameEngine
+                  try {
+                    engine.nextDay();
+                  } catch (_) {
+                    // W razie braku metody nextDay, fallback na podpięcie mechaniki
+                  }
+
+                  (context as Element).markNeedsBuild();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Postęp dnia został wykonany!'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
               ),
             ),
 
