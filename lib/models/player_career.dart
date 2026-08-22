@@ -3,17 +3,24 @@ import 'player_contract.dart';
 import 'player_match_stats.dart';
 
 class PlayerCareer {
+  // ==========================================================
+  // PODSTAWOWE INFORMACJE
+  // ==========================================================
+
   final String id;
 
   String firstName;
   String lastName;
-
   String nationality;
 
   int age;
   int height;
 
   PlayerPosition position;
+
+  // ==========================================================
+  // UMIEJĘTNOŚCI
+  // ==========================================================
 
   int overall;
   int potential;
@@ -25,15 +32,28 @@ class PlayerCareer {
   int defending;
   int physical;
 
+  // ==========================================================
+  // FORMA / KONDYCJA
+  // ==========================================================
+
   int stamina;
   int fitness;
+  int fatigue;
   int form;
+
+  // ==========================================================
+  // PSYCHOLOGIA
+  // ==========================================================
 
   int morale;
   int happiness;
 
   int managerRelationship;
   int teamRelationship;
+
+  // ==========================================================
+  // KLUB / KONTRAKT
+  // ==========================================================
 
   String? clubId;
 
@@ -53,7 +73,7 @@ class PlayerCareer {
   // STATYSTYKI MECZOWE
   // ==========================================================
 
-  final PlayerMatchStats matchStats = PlayerMatchStats();
+  final PlayerMatchStats matchStats;
 
   // ==========================================================
   // KONSTRUKTOR
@@ -75,19 +95,30 @@ class PlayerCareer {
     required this.dribbling,
     required this.defending,
     required this.physical,
+
     this.stamina = 100,
     this.fitness = 100,
+    this.fatigue = 0,
     this.form = 70,
+
     this.morale = 75,
     this.happiness = 75,
+
     this.managerRelationship = 50,
     this.teamRelationship = 50,
+
     this.clubId,
+
     this.shirtNumber = 1,
+
+    this.contract,
+
     this.careerGoals = 0,
     this.careerAssists = 0,
     this.careerAppearances = 0,
-  });
+
+    PlayerMatchStats? matchStats,
+  }) : matchStats = matchStats ?? PlayerMatchStats();
 
   // ==========================================================
   // PEŁNE IMIĘ I NAZWISKO
@@ -158,5 +189,41 @@ class PlayerCareer {
 
   void refreshOverall() {
     overall = calculateOverall().clamp(1, 99);
+  }
+
+  // ==========================================================
+  // DODANIE GOLA DO KARIERY
+  // ==========================================================
+
+  void addCareerGoal() {
+    careerGoals++;
+    matchStats.addGoal();
+  }
+
+  // ==========================================================
+  // DODANIE ASYSTY DO KARIERY
+  // ==========================================================
+
+  void addCareerAssist() {
+    careerAssists++;
+    matchStats.addAssist();
+  }
+
+  // ==========================================================
+  // DODANIE WYSTĘPU
+  // ==========================================================
+
+  void addCareerAppearance({
+    required int minutes,
+    required bool started,
+    required double rating,
+  }) {
+    careerAppearances++;
+
+    matchStats.addAppearance(
+      playedMinutes: minutes,
+      started: started,
+      rating: rating,
+    );
   }
 }
