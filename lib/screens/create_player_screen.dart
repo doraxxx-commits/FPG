@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
 import '../models/player.dart';
+import 'club_selection_screen.dart';
 
 class CreatePlayerScreen extends StatefulWidget {
   final GameEngine engine;
@@ -41,23 +42,51 @@ class _CreatePlayerScreenState extends State<CreatePlayerScreen> {
   }
 
   void createPlayer() {
-    final firstName = firstNameController.text.trim();
-    final lastName = lastNameController.text.trim();
+  final firstName = firstNameController.text.trim();
+  final lastName = lastNameController.text.trim();
 
-    final height = int.tryParse(
-      heightController.text.trim(),
+  final height = int.tryParse(
+    heightController.text.trim(),
+  );
+
+  if (firstName.isEmpty ||
+      lastName.isEmpty ||
+      height == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Uzupełnij imię, nazwisko i prawidłowy wzrost.',
+        ),
+      ),
     );
 
-    if (firstName.isEmpty ||
-        lastName.isEmpty ||
-        height == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Uzupełnij imię, nazwisko i prawidłowy wzrost.',
-          ),
-        ),
-      );
+    return;
+  }
+
+  widget.engine.createPlayer(
+    firstName: firstName,
+    lastName: lastName,
+    nationality: nationality,
+    age: age,
+    height: height,
+    position: position,
+    pace: pace,
+    shooting: shooting,
+    passing: passing,
+    dribbling: dribbling,
+    defending: defending,
+    physical: physical,
+  );
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ClubSelectionScreen(
+        engine: widget.engine,
+      ),
+    ),
+  );
+}
 
       return;
     }
