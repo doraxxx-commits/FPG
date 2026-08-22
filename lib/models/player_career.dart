@@ -1,741 +1,962 @@
-import 'player.dart';
-import 'player_contract.dart';
-import 'player_match_stats.dart';
+import 'dart:math';
 
-class PlayerCareer {
-  // ==========================================================
-  // PODSTAWOWE INFORMACJE
-  // ==========================================================
+import '../data/world_data.dart';
 
-  final String id;
+import '../models/club.dart';
+import '../models/fixture.dart';
+import '../models/league.dart';
+import '../models/match_result.dart';
+import '../models/player.dart';
+import '../models/player_career.dart';
+import '../models/player_contract.dart';
 
-  String firstName;
-  String lastName;
-  String nationality;
+import '../simulation/fixture_generator.dart';
+import '../simulation/league_engine.dart';
+import '../simulation/match_engine.dart';
 
-  int age;
-  int height;
+import 'game_state.dart';
+import 'training_engine.dart';
 
-  PlayerPosition position;
+class GameEngine {
+  final GameState state;
 
-  // ==========================================================
-  // UMIEJĘTNOŚCI
-  // ==========================================================
+  late final List<League> leagues;
+  late final List<Club> clubs;
+  late final List<Player> players;
 
-  int overall;
-  int potential;
+  late final LeagueEngine leagueEngine;
+  late final MatchEngine matchEngine;
 
-  int pace;
-  int shooting;
-  int passing;
-  int dribbling;
-  int defending;
-  int physical;
+  late final List<Fixture> fixtures;
 
-  // ==========================================================
-  // FORMA / KONDYCJA
-  // ==========================================================
+  final TrainingEngine trainingEngine = TrainingEngine();
 
-  int stamina;
-  int fitness;
-  int fatigue;
-  int form;
+  final Random _random = Random();
 
-  // ==========================================================
-  // PSYCHOLOGIA
-  // ==========================================================
-
-  int morale;
-  int happiness;
-
-  // ==========================================================
-  // ZAUFANIE TRENERA / RELACJE
-  // ==========================================================
-
-  int managerRelationship;
-  int teamRelationship;
-
-  // ==========================================================
-  // DOŚWIADCZENIE
-  // ==========================================================
-
-  int experience;
-  int experienceToNextLevel;
-
-  // ==========================================================
-  // KLUB / KONTRAKT
-  // ==========================================================
-
-  String? clubId;
-
-  int shirtNumber;
-
-  // ==========================================================
-  // STATUS W KADRZE
-  // ==========================================================
-
-  String squadStatus;
-
-  // Czy zawodnik znajduje się w kadrze meczowej
-  bool inMatchSquad;
-
-  // Czy zawodnik jest aktualnie podstawowym zawodnikiem
-  bool isStarter;
-
-  PlayerContract? contract;
-
-  // ==========================================================
-  // STATYSTYKI KARIERY
-  // ==========================================================
-
-  int careerGoals;
-  int careerAssists;
-  int careerAppearances;
-
-  // ==========================================================
-  // STATYSTYKI MECZOWE
-  // ==========================================================
-
-  final PlayerMatchStats matchStats;
+  PlayerCareer? careerPlayer;
 
   // ==========================================================
   // KONSTRUKTOR
   // ==========================================================
 
-  PlayerCareer({
-    required this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.nationality,
-    required this.age,
-    required this.height,
-    required this.position,
-    required this.overall,
-    required this.potential,
-    required this.pace,
-    required this.shooting,
-    required this.passing,
-    required this.dribbling,
-    required this.defending,
-    required this.physical,
+  GameEngine({
+    GameState? state,
+  }) : state = state ?? GameState() {
+    leagues = WorldData.leagues;
+    clubs = WorldData.clubs;
+    players = WorldData.players;
 
-    // Forma / kondycja
-    this.stamina = 100,
-    this.fitness = 100,
-    this.fatigue = 0,
-    this.form = 70,
+    final leagueClubs = clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
 
-    // Psychologia
-    this.morale = 75,
-    this.happiness = 75,
-
-    // Zaufanie trenera
-    this.managerRelationship = 50,
-    this.teamRelationship = 50,
-
-    // Doświadczenie
-    this.experience = 0,
-    this.experienceToNextLevel = 100,
-
-    // Klub
-    this.clubId,
-    this.shirtNumber = 1,
-
-    // Status
-    this.squadStatus = 'Młody zawodnik',
-    this.inMatchSquad = false,
-    this.isStarter = false,
-
-    // Kontrakt
-    this.contract,
-
-    // Statystyki kariery
-    this.careerGoals = 0,
-    this.careerAssists = 0,
-    this.careerAppearances = 0,
-
-    // Statystyki meczowe
-    PlayerMatchStats? matchStats,
-  }) : matchStats = matchStats ?? PlayerMatchStats();
-
-  // ==========================================================
-  // PEŁNE IMIĘ I NAZWISKO
-  // ==========================================================
-
-  String get fullName {
-    return '$firstName $lastName';
-  }
-
-  // ==========================================================
-  // OVR
-  // ==========================================================
-
-  int calculateOverall() {
-    switch (position) {
-      case PlayerPosition.goalkeeper:
-        return (
-          defending * 0.45 +
-          physical * 0.20 +
-          passing * 0.15 +
-          pace * 0.10 +
-          dribbling * 0.05 +
-          shooting * 0.05
-        ).round();
-
-      case PlayerPosition.defender:
-        return (
-          defending * 0.45 +
-          physical * 0.25 +
-          pace * 0.15 +
-          passing * 0.10 +
-          dribbling * 0.05
-        ).round();
-
-      case PlayerPosition.midfielder:
-        return (
-          passing * 0.30 +
-          dribbling * 0.20 +
-          shooting * 0.15 +
-          physical * 0.15 +
-          pace * 0.10 +
-          defending * 0.10
-        ).round();
-
-      case PlayerPosition.winger:
-        return (
-          pace * 0.30 +
-          dribbling * 0.30 +
-          shooting * 0.20 +
-          passing * 0.10 +
-          physical * 0.10
-        ).round();
-
-      case PlayerPosition.striker:
-        return (
-          shooting * 0.40 +
-          pace * 0.20 +
-          dribbling * 0.15 +
-          physical * 0.15 +
-          passing * 0.10
-        ).round();
-    }
-  }
-
-  // ==========================================================
-  // ODŚWIEŻANIE OVR
-  // ==========================================================
-
-  void refreshOverall() {
-    overall = calculateOverall().clamp(1, 99);
-  }
-
-  // ==========================================================
-  // ZAUFANIE TRENERA
-  // ==========================================================
-
-  void increaseManagerTrust(int amount) {
-    if (amount <= 0) {
-      return;
-    }
-
-    managerRelationship =
-        (managerRelationship + amount).clamp(0, 100);
-
-    _updateSquadStatusFromTrust();
-  }
-
-  void decreaseManagerTrust(int amount) {
-    if (amount <= 0) {
-      return;
-    }
-
-    managerRelationship =
-        (managerRelationship - amount).clamp(0, 100);
-
-    _updateSquadStatusFromTrust();
-  }
-
-  // ==========================================================
-  // POZIOM ZAUFANIA TRENERA
-  // ==========================================================
-
-  String get managerTrustLevel {
-    if (managerRelationship <= 20) {
-      return 'Brak zaufania';
-    }
-
-    if (managerRelationship <= 40) {
-      return 'Niskie zaufanie';
-    }
-
-    if (managerRelationship <= 60) {
-      return 'Normalne zaufanie';
-    }
-
-    if (managerRelationship <= 80) {
-      return 'Duże zaufanie';
-    }
-
-    return 'Kluczowy zawodnik';
-  }
-
-  // ==========================================================
-  // STATUS ZAWODNIKA NA PODSTAWIE ZAUFANIA
-  // ==========================================================
-
-  void _updateSquadStatusFromTrust() {
-    if (managerRelationship <= 20) {
-      squadStatus = 'Poza planami trenera';
-      inMatchSquad = false;
-      isStarter = false;
-      return;
-    }
-
-    if (managerRelationship <= 40) {
-      squadStatus = 'Rezerwowy';
-      isStarter = false;
-      return;
-    }
-
-    if (managerRelationship <= 60) {
-      squadStatus = 'Rotacja';
-      isStarter = false;
-      return;
-    }
-
-    if (managerRelationship <= 80) {
-      squadStatus = 'Podstawowy zawodnik';
-      return;
-    }
-
-    squadStatus = 'Kluczowy zawodnik';
-    isStarter = true;
-  }
-
-  // ==========================================================
-  // DODANIE GOLA DO KARIERY
-  // ==========================================================
-
-  void addCareerGoal() {
-    careerGoals++;
-
-    matchStats.addGoal();
-
-    // Dobry wpływ na zaufanie trenera.
-    increaseManagerTrust(3);
-  }
-
-  // ==========================================================
-  // DODANIE ASYSTY DO KARIERY
-  // ==========================================================
-
-  void addCareerAssist() {
-    careerAssists++;
-
-    matchStats.addAssist();
-
-    // Dobry wpływ na zaufanie trenera.
-    increaseManagerTrust(2);
-  }
-
-  // ==========================================================
-  // DODANIE WYSTĘPU
-  // ==========================================================
-
-  void addCareerAppearance({
-    required int minutes,
-    required bool started,
-    required double rating,
-  }) {
-    careerAppearances++;
-
-    matchStats.addAppearance(
-      playedMinutes: minutes,
-      started: started,
-      rating: rating,
+    leagueEngine = LeagueEngine(
+      clubs: leagueClubs,
     );
 
-    // Występ od pierwszej minuty daje mały bonus.
-    if (started) {
-      increaseManagerTrust(1);
-    }
+    matchEngine = MatchEngine();
 
-    // Dobra ocena = większe zaufanie.
-    if (rating >= 7.0) {
-      increaseManagerTrust(2);
-    }
-
-    if (rating >= 8.0) {
-      increaseManagerTrust(2);
-    }
-
-    // Bardzo słaby występ = utrata zaufania.
-    if (rating < 5.5) {
-      decreaseManagerTrust(2);
-    }
-
-    if (rating < 5.0) {
-      decreaseManagerTrust(2);
-    }
+    fixtures =
+        FixtureGenerator.generateDoubleRoundRobin(
+      leagueClubs,
+    );
   }
 
   // ==========================================================
-  // ZAUFANIE ZA TRENING
+  // TWORZENIE ZAWODNIKA
   // ==========================================================
 
-  void rewardTrainingTrust() {
-    increaseManagerTrust(1);
-  }
-
-  // ==========================================================
-  // KARA ZA OPUSZCZENIE TRENINGU / ZŁĄ FORMĘ
-  // ==========================================================
-
-  void penalizeTrainingTrust() {
-    decreaseManagerTrust(1);
-  }
-
-  // ==========================================================
-  // DECYZJA TRENERA PRZED MECZEM
-  // ==========================================================
-
-  void updateMatchStatus() {
-    // Bardzo niskie zaufanie.
-    // Zawodnik nie znajduje się w kadrze.
-    if (managerRelationship <= 20) {
-      squadStatus = 'Poza planami trenera';
-      inMatchSquad = false;
-      isStarter = false;
-      return;
-    }
-
-    // Niskie zaufanie.
-    // Zawodnik jest rezerwowym.
-    if (managerRelationship <= 40) {
-      squadStatus = 'Rezerwowy';
-      inMatchSquad = true;
-      isStarter = false;
-      return;
-    }
-
-    // Średnie zaufanie.
-    // Zawodnik jest w rotacji.
-    if (managerRelationship <= 60) {
-      squadStatus = 'Rotacja';
-      inMatchSquad = true;
-      isStarter = false;
-      return;
-    }
-
-    // Duże zaufanie.
-    // Zawodnik najczęściej wychodzi w pierwszym składzie.
-    if (managerRelationship <= 80) {
-      squadStatus = 'Podstawowy zawodnik';
-      inMatchSquad = true;
-      isStarter = true;
-      return;
-    }
-
-    // Bardzo duże zaufanie.
-    // Zawodnik jest kluczową postacią zespołu.
-    squadStatus = 'Kluczowy zawodnik';
-    inMatchSquad = true;
-    isStarter = true;
-  }
-
-  // ==========================================================
-  // CZY ZAWODNIK MOŻE ZAGRAĆ
-  // ==========================================================
-
-  bool get canPlayMatch {
-    if (!inMatchSquad) {
-      return false;
-    }
-
-    if (fitness <= 20) {
-      return false;
-    }
-
-    if (fatigue >= 95) {
-      return false;
-    }
-
-    return true;
-  }
-
-  // ==========================================================
-  // CZY ZAWODNIK JEST PODSTAWOWYM
-  // ==========================================================
-
-  bool get isRegularStarter {
-    return isStarter && inMatchSquad && canPlayMatch;
-  }
-
-  // ==========================================================
-  // RĘCZNE USTAWIENIE STATUSU
-  // ==========================================================
-
-  void setMatchSquadStatus({
-    required bool selected,
-    required bool starter,
+  void createPlayer({
+    required String firstName,
+    required String lastName,
+    required String nationality,
+    required int age,
+    required int height,
+    required PlayerPosition position,
+    required int pace,
+    required int shooting,
+    required int passing,
+    required int dribbling,
+    required int defending,
+    required int physical,
   }) {
-    inMatchSquad = selected;
-
-    if (!selected) {
-      isStarter = false;
-      return;
-    }
-
-    if (starter && canPlayMatch) {
-      isStarter = true;
-    } else {
-      isStarter = false;
-    }
-  }
-
-  // ==========================================================
-  // WYSTĘP W MECZU
-  // ==========================================================
-  //
-  // Ta metoda obsługuje cały występ zawodnika:
-  //
-  // - minuty,
-  // - ocenę,
-  // - gole,
-  // - asysty,
-  // - zmęczenie,
-  // - kondycję,
-  // - formę.
-  //
-  // Dzięki temu GameEngine nie musi osobno wykonywać
-  // kilkunastu operacji po każdym meczu.
-  // ==========================================================
-
-  void processMatchPerformance({
-    required int minutes,
-    required bool started,
-    required double rating,
-    int goals = 0,
-    int assists = 0,
-  }) {
-    // ----------------------------------------------------------
-    // ZABEZPIECZENIA
-    // ----------------------------------------------------------
-
-    if (minutes < 0) {
-      minutes = 0;
-    }
-
-    if (minutes > 120) {
-      minutes = 120;
-    }
-
-    if (rating < 0) {
-      rating = 0;
-    }
-
-    if (rating > 10) {
-      rating = 10;
-    }
-
-    if (goals < 0) {
-      goals = 0;
-    }
-
-    if (assists < 0) {
-      assists = 0;
-    }
-
-    // ----------------------------------------------------------
-    // JEŻELI NIE ZAGRAŁ
-    // ----------------------------------------------------------
-
-    if (minutes == 0) {
-      return;
-    }
-
-    // ----------------------------------------------------------
-    // WYSTĘP
-    // ----------------------------------------------------------
-
-    addCareerAppearance(
-      minutes: minutes,
-      started: started,
-      rating: rating,
+    final player = PlayerCareer(
+      id: 'career_player_001',
+      firstName: firstName,
+      lastName: lastName,
+      nationality: nationality,
+      age: age,
+      height: height,
+      position: position,
+      overall: 1,
+      potential: 85,
+      pace: pace,
+      shooting: shooting,
+      passing: passing,
+      dribbling: dribbling,
+      defending: defending,
+      physical: physical,
     );
 
-    // ----------------------------------------------------------
-    // GOLE
-    // ----------------------------------------------------------
+    player.refreshOverall();
 
-    for (int i = 0; i < goals; i++) {
-      addCareerGoal();
-    }
-
-    // ----------------------------------------------------------
-    // ASYSTY
-    // ----------------------------------------------------------
-
-    for (int i = 0; i < assists; i++) {
-      addCareerAssist();
-    }
-
-    // ----------------------------------------------------------
-    // ZMĘCZENIE PO MECZU
-    // ----------------------------------------------------------
-
-    int fatigueIncrease;
-
-    if (minutes >= 90) {
-      fatigueIncrease = 18;
-    } else if (minutes >= 60) {
-      fatigueIncrease = 13;
-    } else if (minutes >= 30) {
-      fatigueIncrease = 8;
-    } else {
-      fatigueIncrease = 4;
-    }
-
-    // Wysoka intensywność przy słabej kondycji
-    // powoduje dodatkowe zmęczenie.
-    if (fitness <= 50) {
-      fatigueIncrease += 3;
-    }
-
-    fatigue = (
-      fatigue + fatigueIncrease
-    ).clamp(0, 100);
-
-    // ----------------------------------------------------------
-    // KONDYCJA PO MECZU
-    // ----------------------------------------------------------
-
-    int fitnessLoss;
-
-    if (minutes >= 90) {
-      fitnessLoss = 15;
-    } else if (minutes >= 60) {
-      fitnessLoss = 10;
-    } else if (minutes >= 30) {
-      fitnessLoss = 6;
-    } else {
-      fitnessLoss = 3;
-    }
-
-    fitness = (
-      fitness - fitnessLoss
-    ).clamp(0, 100);
-
-    // ----------------------------------------------------------
-    // FORMA
-    // ----------------------------------------------------------
-
-    if (rating >= 8.0) {
-      form = (
-        form + 3
-      ).clamp(0, 100);
-    } else if (rating >= 7.0) {
-      form = (
-        form + 2
-      ).clamp(0, 100);
-    } else if (rating >= 6.0) {
-      form = (
-        form + 1
-      ).clamp(0, 100);
-    } else if (rating < 5.5) {
-      form = (
-        form - 2
-      ).clamp(0, 100);
-    } else if (rating < 6.0) {
-      form = (
-        form - 1
-      ).clamp(0, 100);
-    }
-
-    // ----------------------------------------------------------
-    // DODATKOWA MOTYWACJA ZA GOLE I ASYSTY
-    // ----------------------------------------------------------
-
-    if (goals > 0) {
-      morale = (
-        morale + goals
-      ).clamp(0, 100);
-
-      happiness = (
-        happiness + goals
-      ).clamp(0, 100);
-    }
-
-    if (assists > 0) {
-      morale = (
-        morale + assists
-      ).clamp(0, 100);
-
-      happiness = (
-        happiness + assists
-      ).clamp(0, 100);
-    }
-
-    // ----------------------------------------------------------
-    // DOŚWIADCZENIE
-    // ----------------------------------------------------------
-
-    int experienceGain = 5;
-
-    if (started) {
-      experienceGain += 3;
-    }
-
-    if (minutes >= 60) {
-      experienceGain += 3;
-    }
-
-    if (rating >= 7.0) {
-      experienceGain += 4;
-    }
-
-    if (goals > 0) {
-      experienceGain += goals * 3;
-    }
-
-    if (assists > 0) {
-      experienceGain += assists * 2;
-    }
-
-    addExperience(experienceGain);
+    careerPlayer = player;
   }
 
   // ==========================================================
-  // DOŚWIADCZENIE
+  // NASTĘPNY DZIEŃ
   // ==========================================================
 
-  void addExperience(int amount) {
-    if (amount <= 0) {
-      return;
+  void advanceDay() {
+    state.nextDay();
+
+    recoverPlayer();
+
+    updatePlayerForm();
+
+    // Trener podejmuje decyzję o statusie zawodnika.
+    updateCareerPlayerMatchStatus();
+
+    playMatchesForToday();
+  }
+
+  // ==========================================================
+  // KROK 31
+  // INFORMACJE O UDZIALE ZAWODNIKA W MECZU
+  // ==========================================================
+
+  bool get careerPlayerCanPlay {
+    if (careerPlayer == null) {
+      return false;
     }
 
-    experience += amount;
+    final player = careerPlayer!;
 
-    while (experience >= experienceToNextLevel) {
-      experience -= experienceToNextLevel;
+    if (player.clubId == null) {
+      return false;
+    }
 
-      experienceToNextLevel = (
-        experienceToNextLevel * 1.15
-      ).round();
+    player.updateMatchStatus();
 
-      if (experienceToNextLevel < 100) {
-        experienceToNextLevel = 100;
+    return player.canPlayMatch;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK JEST W KADRZE MECZOWEJ
+  // ==========================================================
+
+  bool get careerPlayerInMatchSquad {
+    if (careerPlayer == null) {
+      return false;
+    }
+
+    return careerPlayer!.inMatchSquad;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK JEST W PODSTAWOWYM SKŁADZIE
+  // ==========================================================
+
+  bool get careerPlayerIsStarter {
+    if (careerPlayer == null) {
+      return false;
+    }
+
+    return careerPlayer!.isRegularStarter;
+  }
+
+  // ==========================================================
+  // STATUS MECZOWY ZAWODNIKA
+  // ==========================================================
+
+  String get careerPlayerMatchStatus {
+    if (careerPlayer == null) {
+      return 'Brak zawodnika';
+    }
+
+    return careerPlayer!.squadStatus;
+  }
+
+  // ==========================================================
+  // KROK 32
+  // OSTATNI WYNIK WYSTĘPU ZAWODNIKA
+  // ==========================================================
+
+  String get careerPlayerLastMatchSummary {
+    if (careerPlayer == null) {
+      return 'Brak danych';
+    }
+
+    final player = careerPlayer!;
+
+    if (player.careerAppearances <= 0) {
+      return 'Brak rozegranych meczów';
+    }
+
+    return 'Występy: ${player.careerAppearances} | '
+        'Gole: ${player.careerGoals} | '
+        'Asysty: ${player.careerAssists}';
+  }
+
+  // ==========================================================
+  // MECZE
+  // ==========================================================
+
+  void playMatchesForToday() {
+    for (final fixture in fixtures) {
+      if (fixture.played) {
+        continue;
+      }
+
+      if (fixture.year == state.year &&
+          fixture.month == state.month &&
+          fixture.day == state.day) {
+        playFixture(fixture);
       }
     }
   }
 
   // ==========================================================
-  // CZY ZAWODNIK JEST GOTOWY DO MECZU
+  // ROZGRYWANIE MECZU
   // ==========================================================
 
-  bool get isMatchReady {
-    return canPlayMatch &&
-        fitness > 20 &&
-        fatigue < 95;
+  MatchResult playFixture(
+    Fixture fixture,
+  ) {
+    final home = clubs.firstWhere(
+      (club) => club.id == fixture.homeClubId,
+    );
+
+    final away = clubs.firstWhere(
+      (club) => club.id == fixture.awayClubId,
+    );
+
+    final result = matchEngine.simulate(
+      home: home,
+      away: away,
+    );
+
+    fixture.played = true;
+
+    fixture.homeGoals = result.homeGoals;
+    fixture.awayGoals = result.awayGoals;
+
+    leagueEngine.recordMatch(
+      homeClubId: result.homeClubId,
+      awayClubId: result.awayClubId,
+      homeGoals: result.homeGoals,
+      awayGoals: result.awayGoals,
+    );
+
+    // ========================================================
+    // KROK 32
+    // WYSTĘP NASZEGO ZAWODNIKA
+    // ========================================================
+
+    _processCareerPlayerMatch(
+      fixture,
+    );
+
+    return result;
+  }
+
+  // ==========================================================
+  // KROK 32
+  // OBSŁUGA WYSTĘPU ZAWODNIKA
+  // ==========================================================
+
+  void _processCareerPlayerMatch(
+    Fixture fixture,
+  ) {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    // Zawodnik bez klubu nie może wystąpić.
+    if (player.clubId == null) {
+      return;
+    }
+
+    // Sprawdzamy, czy jego klub właśnie gra.
+    final isCareerPlayerHome =
+        fixture.homeClubId == player.clubId;
+
+    final isCareerPlayerAway =
+        fixture.awayClubId == player.clubId;
+
+    if (!isCareerPlayerHome && !isCareerPlayerAway) {
+      return;
+    }
+
+    // Aktualizacja statusu przed meczem.
+    player.updateMatchStatus();
+
+    // Jeżeli nie ma go w kadrze,
+    // nie rozgrywa żadnych minut.
+    if (!player.inMatchSquad) {
+      return;
+    }
+
+    // Jeżeli nie może fizycznie zagrać,
+    // również nie wystąpi.
+    if (!player.canPlayMatch) {
+      player.isStarter = false;
+      return;
+    }
+
+    // ========================================================
+    // PODSTAWOWY
+    // ========================================================
+
+    if (player.isStarter) {
+      final minutes = _generateStarterMinutes(player);
+
+      final rating = _generateMatchRating(
+        player,
+        minutes,
+      );
+
+      final goals = _generateGoals(player, rating);
+
+      final assists = _generateAssists(
+        player,
+        rating,
+      );
+
+      player.processMatchPerformance(
+        minutes: minutes,
+        started: true,
+        rating: rating,
+        goals: goals,
+        assists: assists,
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // REZERWOWY
+    // ========================================================
+
+    // Rezerwowy nie zawsze wchodzi.
+    //
+    // Im większe zaufanie trenera,
+    // tym większa szansa na wejście.
+    final substitutionChance =
+        _calculateSubstitutionChance(player);
+
+    final roll = _random.nextInt(100);
+
+    if (roll >= substitutionChance) {
+      return;
+    }
+
+    final minutes = _generateSubstituteMinutes();
+
+    final rating = _generateMatchRating(
+      player,
+      minutes,
+    );
+
+    final goals = _generateGoals(
+      player,
+      rating,
+    );
+
+    final assists = _generateAssists(
+      player,
+      rating,
+    );
+
+    player.processMatchPerformance(
+      minutes: minutes,
+      started: false,
+      rating: rating,
+      goals: goals,
+      assists: assists,
+    );
+  }
+
+  // ==========================================================
+  // KROK 32
+  // MINUTY DLA PODSTAWOWEGO
+  // ==========================================================
+
+  int _generateStarterMinutes(
+    PlayerCareer player,
+  ) {
+    int minimum = 65;
+    int maximum = 95;
+
+    // Bardzo dobra kondycja zwiększa szansę
+    // na rozegranie pełnego meczu.
+    if (player.fitness >= 85) {
+      minimum = 80;
+      maximum = 95;
+    } else if (player.fitness <= 50) {
+      minimum = 55;
+      maximum = 80;
+    }
+
+    return minimum +
+        _random.nextInt(
+          maximum - minimum + 1,
+        );
+  }
+
+  // ==========================================================
+  // KROK 32
+  // MINUTY DLA REZERWOWEGO
+  // ==========================================================
+
+  int _generateSubstituteMinutes() {
+    return 15 +
+        _random.nextInt(31);
+  }
+
+  // ==========================================================
+  // KROK 32
+  // SZANSA WEJŚCIA Z ŁAWKI
+  // ==========================================================
+
+  int _calculateSubstitutionChance(
+    PlayerCareer player,
+  ) {
+    int chance;
+
+    if (player.managerRelationship <= 30) {
+      chance = 10;
+    } else if (player.managerRelationship <= 40) {
+      chance = 20;
+    } else if (player.managerRelationship <= 50) {
+      chance = 30;
+    } else if (player.managerRelationship <= 60) {
+      chance = 40;
+    } else if (player.managerRelationship <= 70) {
+      chance = 55;
+    } else {
+      chance = 70;
+    }
+
+    // Kondycja wpływa na decyzję trenera.
+    if (player.fitness >= 85) {
+      chance += 10;
+    } else if (player.fitness <= 40) {
+      chance -= 15;
+    }
+
+    // Zbyt duże zmęczenie zmniejsza szansę.
+    if (player.fatigue >= 70) {
+      chance -= 15;
+    }
+
+    return chance.clamp(5, 90);
+  }
+
+  // ==========================================================
+  // KROK 32
+  // OCENA MECZOWA
+  // ==========================================================
+
+  double _generateMatchRating(
+    PlayerCareer player,
+    int minutes,
+  ) {
+    double rating = 6.0;
+
+    // OVR zawodnika.
+    rating +=
+        (player.overall - 50) * 0.035;
+
+    // Forma.
+    rating +=
+        (player.form - 50) * 0.018;
+
+    // Kondycja.
+    rating +=
+        (player.fitness - 70) * 0.008;
+
+    // Zaufanie trenera ma mały wpływ
+    // na psychikę zawodnika.
+    rating +=
+        (player.managerRelationship - 50) * 0.006;
+
+    // Losowość meczu.
+    rating +=
+        (_random.nextDouble() * 1.8) - 0.9;
+
+    // Krótszy występ = trochę większa losowość.
+    if (minutes < 30) {
+      rating +=
+          (_random.nextDouble() * 1.0) - 0.5;
+    }
+
+    return rating.clamp(4.0, 9.5);
+  }
+
+  // ==========================================================
+  // KROK 32
+  // GOLE
+  // ==========================================================
+
+  int _generateGoals(
+    PlayerCareer player,
+    double rating,
+  ) {
+    // Bramkarze i obrońcy mają bardzo małą
+    // szansę na gola w uproszczonej symulacji.
+    double chance;
+
+    switch (player.position) {
+      case PlayerPosition.goalkeeper:
+        chance = 0.003;
+        break;
+
+      case PlayerPosition.defender:
+        chance = 0.015;
+        break;
+
+      case PlayerPosition.midfielder:
+        chance = 0.035;
+        break;
+
+      case PlayerPosition.winger:
+        chance = 0.055;
+        break;
+
+      case PlayerPosition.striker:
+        chance = 0.080;
+        break;
+    }
+
+    // OVR pomaga.
+    chance +=
+        player.overall * 0.0008;
+
+    // Strzelanie pomaga.
+    chance +=
+        player.shooting * 0.0007;
+
+    // Wysoka ocena = lepszy występ.
+    if (rating >= 8.0) {
+      chance += 0.025;
+    }
+
+    final roll = _random.nextDouble();
+
+    if (roll < chance) {
+      // Najczęściej maksymalnie jeden gol
+      // w pojedynczym uproszczonym występie.
+      if (_random.nextDouble() < 0.15) {
+        return 2;
+      }
+
+      return 1;
+    }
+
+    return 0;
+  }
+
+  // ==========================================================
+  // KROK 32
+  // ASYSTY
+  // ==========================================================
+
+  int _generateAssists(
+    PlayerCareer player,
+    double rating,
+  ) {
+    double chance;
+
+    switch (player.position) {
+      case PlayerPosition.goalkeeper:
+        chance = 0.002;
+        break;
+
+      case PlayerPosition.defender:
+        chance = 0.015;
+        break;
+
+      case PlayerPosition.midfielder:
+        chance = 0.050;
+        break;
+
+      case PlayerPosition.winger:
+        chance = 0.060;
+        break;
+
+      case PlayerPosition.striker:
+        chance = 0.035;
+        break;
+    }
+
+    chance +=
+        player.passing * 0.0006;
+
+    chance +=
+        player.dribbling * 0.0003;
+
+    if (rating >= 8.0) {
+      chance += 0.025;
+    }
+
+    if (_random.nextDouble() < chance) {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  // ==========================================================
+  // TRENING
+  // ==========================================================
+
+  TrainingResult trainPlayer(
+    TrainingType type,
+  ) {
+    if (careerPlayer == null) {
+      throw StateError(
+        'Brak aktywnego zawodnika.',
+      );
+    }
+
+    final player = careerPlayer!;
+
+    if (player.fatigue >= 90) {
+      throw StateError(
+        'Zawodnik jest zbyt zmęczony na kolejny trening.',
+      );
+    }
+
+    final result = trainingEngine.train(
+      player,
+      type,
+    );
+
+    player.fatigue = (
+      player.fatigue + result.fatigue
+    ).clamp(0, 100);
+
+    player.fitness = (
+      player.fitness - result.fatigue
+    ).clamp(0, 100);
+
+    player.refreshOverall();
+
+    // Dobry trening wpływa na zaufanie trenera.
+    player.rewardTrainingTrust();
+
+    return result;
+  }
+
+  // ==========================================================
+  // REGENERACJA
+  // ==========================================================
+
+  void recoverPlayer() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    final recovery = player.fatigue >= 70
+        ? 5
+        : player.fatigue >= 40
+            ? 8
+            : 10;
+
+    player.fatigue = (
+      player.fatigue - recovery
+    ).clamp(0, 100);
+
+    player.fitness = (
+      player.fitness + recovery
+    ).clamp(0, 100);
+  }
+
+  // ==========================================================
+  // FORMA ZAWODNIKA
+  // ==========================================================
+
+  void updatePlayerForm() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    if (player.fatigue >= 80) {
+      player.form = (
+        player.form - 2
+      ).clamp(0, 100);
+    } else if (player.fatigue >= 60) {
+      player.form = (
+        player.form - 1
+      ).clamp(0, 100);
+    } else if (player.fatigue <= 25) {
+      player.form = (
+        player.form + 1
+      ).clamp(0, 100);
+    }
+  }
+
+  // ==========================================================
+  // DECYZJA TRENERA O STATUSIE ZAWODNIKA
+  // ==========================================================
+
+  void updateCareerPlayerMatchStatus() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    if (player.clubId == null) {
+      player.inMatchSquad = false;
+      player.isStarter = false;
+      player.squadStatus = 'Bez klubu';
+      return;
+    }
+
+    player.updateMatchStatus();
+
+    if (!player.canPlayMatch) {
+      player.isStarter = false;
+    }
+  }
+
+  // ==========================================================
+  // PRZYPISANIE DO KLUBU
+  // ==========================================================
+
+  void assignPlayerToClub(
+    String clubId,
+  ) {
+    if (careerPlayer == null) {
+      throw StateError(
+        'Najpierw utwórz zawodnika.',
+      );
+    }
+
+    final club = clubs.firstWhere(
+      (club) => club.id == clubId,
+    );
+
+    final player = careerPlayer!;
+
+    player.clubId = clubId;
+
+    // Numer zawodnika.
+    player.shirtNumber = 27;
+
+    // Początkowe zaufanie trenera.
+    player.managerRelationship = 50;
+
+    // Początkowy status zawodnika.
+    player.updateMatchStatus();
+
+    final marketValue =
+        calculateStartingMarketValue(
+      player,
+      club,
+    );
+
+    final salary =
+        calculateStartingSalary(
+      player,
+      club,
+    );
+
+    player.contract = PlayerContract(
+      clubId: club.id,
+      yearsRemaining: 3,
+      weeklySalary: salary,
+      marketValue: marketValue,
+      squadNumber: player.shirtNumber,
+      squadStatus: player.squadStatus,
+      managerTrust: player.managerRelationship,
+    );
+  }
+
+  // ==========================================================
+  // WARTOŚĆ POCZĄTKOWA ZAWODNIKA
+  // ==========================================================
+
+  double calculateStartingMarketValue(
+    PlayerCareer player,
+    Club club,
+  ) {
+    final ageFactor = player.age <= 21
+        ? 1.25
+        : player.age <= 25
+            ? 1.10
+            : 0.90;
+
+    final potentialFactor =
+        player.potential / 70;
+
+    final clubFactor =
+        club.overall / 70;
+
+    return 250000 *
+        player.overall *
+        ageFactor *
+        potentialFactor *
+        clubFactor;
+  }
+
+  // ==========================================================
+  // PENSJA POCZĄTKOWA
+  // ==========================================================
+
+  double calculateStartingSalary(
+    PlayerCareer player,
+    Club club,
+  ) {
+    const baseSalary = 150.0;
+
+    final overallFactor =
+        player.overall / 50;
+
+    final clubFactor =
+        club.overall / 70;
+
+    return baseSalary *
+        overallFactor *
+        clubFactor;
+  }
+
+  // ==========================================================
+  // TERMINARZ
+  // ==========================================================
+
+  List<Fixture> get todayFixtures {
+    return fixtures.where(
+      (fixture) =>
+          fixture.year == state.year &&
+          fixture.month == state.month &&
+          fixture.day == state.day,
+    ).toList();
+  }
+
+  List<Fixture> get playedFixtures {
+    return fixtures.where(
+      (fixture) => fixture.played,
+    ).toList();
+  }
+
+  List<Fixture> get upcomingFixtures {
+    return fixtures.where(
+      (fixture) => !fixture.played,
+    ).toList();
+  }
+
+  // ==========================================================
+  // DATA
+  // ==========================================================
+
+  String get currentDate {
+    return state.dateString;
+  }
+
+  // ==========================================================
+  // SEZON
+  // ==========================================================
+
+  int get currentSeason {
+    return state.season;
+  }
+
+  // ==========================================================
+  // OKNO TRANSFEROWE - LATO
+  // ==========================================================
+
+  bool get summerTransferWindow {
+    return state.transferWindowSummer;
+  }
+
+  // ==========================================================
+  // OKNO TRANSFEROWE - ZIMA
+  // ==========================================================
+
+  bool get winterTransferWindow {
+    return state.transferWindowWinter;
+  }
+
+  // ==========================================================
+  // KLUBY EKSTRAKLASY
+  // ==========================================================
+
+  List<Club> get leagueClubs {
+    return clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
+  }
+
+  // ==========================================================
+  // KLUBY DOSTĘPNE NA START KARIERY
+  // ==========================================================
+
+  List<Club> get careerStartClubs {
+    return clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
+  }
+
+  // ==========================================================
+  // WYBÓR KLUBU NA START KARIERY
+  // ==========================================================
+
+  void startCareerAtClub(
+    String clubId,
+  ) {
+    if (careerPlayer == null) {
+      throw StateError(
+        'Najpierw utwórz zawodnika.',
+      );
+    }
+
+    assignPlayerToClub(clubId);
+  }
+
+  // ==========================================================
+  // AKTUALNY KLUB ZAWODNIKA
+  // ==========================================================
+
+  Club? get careerClub {
+    if (careerPlayer == null) {
+      return null;
+    }
+
+    final clubId = careerPlayer!.clubId;
+
+    if (clubId == null) {
+      return null;
+    }
+
+    for (final club in clubs) {
+      if (club.id == clubId) {
+        return club;
+      }
+    }
+
+    return null;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK MA KLUB
+  // ==========================================================
+
+  bool get hasCareerClub {
+    return careerPlayer?.clubId != null;
   }
 }
