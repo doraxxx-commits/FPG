@@ -5,6 +5,7 @@ import 'models/player.dart';
 import 'screens/create_player_screen.dart';
 import 'screens/training_screen.dart';
 import 'screens/career_screen.dart';
+import 'screens/player_profile_screen.dart';
 
 void main() {
   runApp(const FPGApp());
