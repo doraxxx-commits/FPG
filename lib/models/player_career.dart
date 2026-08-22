@@ -394,4 +394,102 @@ class PlayerCareer {
   void penalizeTrainingTrust() {
     decreaseManagerTrust(1);
   }
+
+    // ==========================================================
+  // DECYZJA TRENERA PRZED MECZEM
+  // ==========================================================
+
+  void updateMatchStatus() {
+    // Bardzo niskie zaufanie.
+    // Zawodnik nie znajduje się w kadrze.
+    if (managerRelationship <= 20) {
+      squadStatus = 'Poza planami trenera';
+      inMatchSquad = false;
+      isStarter = false;
+      return;
+    }
+
+    // Niskie zaufanie.
+    // Zawodnik jest rezerwowym.
+    if (managerRelationship <= 40) {
+      squadStatus = 'Rezerwowy';
+      inMatchSquad = true;
+      isStarter = false;
+      return;
+    }
+
+    // Średnie zaufanie.
+    // Zawodnik jest w rotacji.
+    if (managerRelationship <= 60) {
+      squadStatus = 'Rotacja';
+      inMatchSquad = true;
+      isStarter = false;
+      return;
+    }
+
+    // Duże zaufanie.
+    // Zawodnik najczęściej wychodzi w pierwszym składzie.
+    if (managerRelationship <= 80) {
+      squadStatus = 'Podstawowy zawodnik';
+      inMatchSquad = true;
+      isStarter = true;
+      return;
+    }
+
+    // Bardzo duże zaufanie.
+    // Zawodnik jest kluczową postacią zespołu.
+    squadStatus = 'Kluczowy zawodnik';
+    inMatchSquad = true;
+    isStarter = true;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK MOŻE ZAGRAĆ
+  // ==========================================================
+
+  bool get canPlayMatch {
+    if (!inMatchSquad) {
+      return false;
+    }
+
+    if (fitness <= 20) {
+      return false;
+    }
+
+    if (fatigue >= 95) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK JEST PODSTAWOWYM
+  // ==========================================================
+
+  bool get isRegularStarter {
+    return isStarter && inMatchSquad && canPlayMatch;
+  }
+
+  // ==========================================================
+  // RĘCZNE USTAWIENIE STATUSU
+  // ==========================================================
+
+  void setMatchSquadStatus({
+    required bool selected,
+    required bool starter,
+  }) {
+    inMatchSquad = selected;
+
+    if (!selected) {
+      isStarter = false;
+      return;
+    }
+
+    if (starter && canPlayMatch) {
+      isStarter = true;
+    } else {
+      isStarter = false;
+    }
+  }
 }
