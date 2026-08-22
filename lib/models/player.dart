@@ -8,10 +8,11 @@ enum PlayerPosition {
 
 class Player {
   final String id;
-  String name;
-
+  final String name;
   int age;
-  PlayerPosition position;
+  final PlayerPosition position;
+  int overall;
+  int potential;
 
   int pace;
   int shooting;
@@ -20,14 +21,31 @@ class Player {
   int defending;
   int physical;
 
-  int value;
-  int weeklyWage;
+  double value;
+  double weeklyWage;
+  String? clubId;
 
-  String clubId;
+  int fatigue;
 
-  int morale;
-  int fitness;
-  int form;
+  Player({
+    required this.id,
+    required this.name,
+    required this.age,
+    required this.position,
+    required this.overall,
+    required this.potential,
+    required this.pace,
+    required this.shooting,
+    required this.passing,
+    required this.dribbling,
+    required this.defending,
+    required this.physical,
+    required this.value,
+    required this.weeklyWage,
+    this.clubId,
+    this.fatigue = 0,
+  });
+}
 
   // ZMĘCZENIE ZAWODNIKA
   int fatigue;
