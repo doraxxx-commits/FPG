@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/game_engine.dart';
 import '../database/save_manager.dart';
 import 'league_table_screen.dart';
+import 'lifestyle_screen.dart';
 import 'manager_screen.dart';
 import 'match_screen.dart';
 import 'news_screen.dart';
@@ -385,7 +386,18 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.favorite,
               title: 'ŻYCIE',
               subtitle: 'Relacje i życie poza boiskiem',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LifestyleScreen(
+                      engine: engine,
+                    ),
+                  ),
+                ).then((_) {
+                  (context as Element).markNeedsBuild();
+                });
+              },
             ),
 
             const SizedBox(height: 20),
