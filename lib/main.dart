@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'core/game_engine.dart';
+
 void main() {
   runApp(const FPGApp());
 }
@@ -21,45 +23,69 @@ class FPGApp extends StatelessWidget {
   }
 }
 
-class FPGHomePage extends StatelessWidget {
+class FPGHomePage extends StatefulWidget {
   const FPGHomePage({super.key});
+
+  @override
+  State<FPGHomePage> createState() => _FPGHomePageState();
+}
+
+class _FPGHomePageState extends State<FPGHomePage> {
+  final GameEngine engine = GameEngine();
+
+  void nextDay() {
+    setState(() {
+      engine.advanceDay();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF080A0F),
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'FPG',
-                style: TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 8,
-                ),
+      appBar: AppBar(
+        title: const Text('FPG'),
+        backgroundColor: const Color(0xFF080A0F),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'FPG',
+              style: TextStyle(
+                fontSize: 56,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 8,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'FOOTBALL PLAYER GAME',
-                style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 3,
-                  color: Colors.white70,
-                ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              'SEZON ${engine.currentSeason}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 40),
-              const Text(
-                'by mEmmor',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white54,
-                ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              engine.currentDate,
+              style: const TextStyle(
+                fontSize: 24,
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 40),
+
+            ElevatedButton(
+              onPressed: nextDay,
+              child: const Text('NASTĘPNY DZIEŃ'),
+            ),
+          ],
         ),
       ),
     );
