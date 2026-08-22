@@ -39,16 +39,6 @@ class _FPGHomePageState extends State<FPGHomePage> {
     });
   }
 
-  void playFirstRound() {
-    setState(() {
-      for (final fixture in engine.roundOneFixtures) {
-        if (!fixture.played) {
-          engine.playFixture(fixture);
-        }
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final table = engine.leagueEngine.table;
@@ -87,7 +77,7 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
-            // INFORMACJE O SEZONIE
+            // SEZON
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -120,6 +110,7 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
                       child: ElevatedButton(
                         onPressed: nextDay,
+
                         child: const Text(
                           'NASTĘPNY DZIEŃ',
                         ),
@@ -130,11 +121,11 @@ class _FPGHomePageState extends State<FPGHomePage> {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // NAJBLIŻSZA KOLEJKA
+            // DZISIAJ
             const Text(
-              'NAJBLIŻSZA KOLEJKA',
+              'DZISIAJ',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -143,57 +134,18 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 10),
 
-            ...engine.roundOneFixtures.map((fixture) {
-              final home = engine.clubs.firstWhere(
-                (club) => club.id == fixture.homeClubId,
-              );
+            if (engine.todayFixtures.isEmpty)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
 
-              final away = engine.clubs.firstWhere(
-                (club) => club.id == fixture.awayClubId,
-              );
-
-              return Card(
-                child: ListTile(
-                  title: Text(
-                    '${home.name}  vs  ${away.name}',
-                  ),
-
-                  subtitle: Text(
-                    'Kolejka ${fixture.round}',
+                  child: Text(
+                    'Brak meczów zaplanowanych na dzisiaj.',
                   ),
                 ),
-              );
-            }),
-
-            const SizedBox(height: 10),
-
-            // PRZYCISK ROZGRYWANIA KOLEJKI
-            SizedBox(
-              width: double.infinity,
-
-              child: ElevatedButton(
-                onPressed: playFirstRound,
-
-                child: const Text(
-                  'ROZEGRAJ KOLEJKĘ',
-                ),
               ),
-            ),
 
-            const SizedBox(height: 20),
-
-            // WYNIKI
-            const Text(
-              'WYNIKI KOLEJKI',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            ...engine.roundOneFixtures.map((fixture) {
+            ...engine.todayFixtures.map((fixture) {
               final home = engine.clubs.firstWhere(
                 (club) => club.id == fixture.homeClubId,
               );
@@ -214,13 +166,50 @@ class _FPGHomePageState extends State<FPGHomePage> {
                   subtitle: Text(
                     fixture.played
                         ? 'Mecz zakończony'
-                        : 'Mecz jeszcze nierozgrany',
+                        : 'Mecz zaplanowany',
                   ),
                 ),
               );
             }),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+
+            // NASTĘPNE MECZE
+            const Text(
+              'NASTĘPNE MECZE',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            ...engine.upcomingFixtures.take(5).map((fixture) {
+              final home = engine.clubs.firstWhere(
+                (club) => club.id == fixture.homeClubId,
+              );
+
+              final away = engine.clubs.firstWhere(
+                (club) => club.id == fixture.awayClubId,
+              );
+
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    '${home.name} vs ${away.name}',
+                  ),
+
+                  subtitle: Text(
+                    '${fixture.day.toString().padLeft(2, '0')}.'
+                    '${fixture.month.toString().padLeft(2, '0')}.'
+                    '${fixture.year}',
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 24),
 
             // TABELA
             const Text(
