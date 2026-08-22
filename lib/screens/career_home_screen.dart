@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
 import '../database/save_manager.dart';
+import 'league_table_screen.dart';
 import 'training_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
@@ -292,8 +293,17 @@ class CareerHomeScreen extends StatelessWidget {
             _menuButton(
               icon: Icons.bar_chart,
               title: 'STATYSTYKI',
-              subtitle: 'Twoja kariera i osiągnięcia',
-              onTap: () {},
+              subtitle: 'Tabela ligowa i osiągnięcia',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LeagueTableScreen(
+                      engine: engine,
+                    ),
+                  ),
+                );
+              },
             ),
 
             _menuButton(
