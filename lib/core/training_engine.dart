@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import '../models/player.dart';
+import '../models/player_career.dart';
 
 enum TrainingType {
   pace,
