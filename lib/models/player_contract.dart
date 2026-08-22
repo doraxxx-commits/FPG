@@ -19,7 +19,7 @@ class PlayerContract {
     required this.weeklySalary,
     required this.marketValue,
     required this.squadNumber,
-    this.squadStatus = 'Młody zawodnik',
+    SquadStatus.reserves,
     this.managerTrust = 50,
   });
 }
