@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
+import 'training_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
   final GameEngine engine;
@@ -231,11 +232,23 @@ class CareerHomeScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             _menuButton(
-              icon: Icons.fitness_center,
-              title: 'TRENING',
-              subtitle: 'Rozwijaj swoje umiejętności',
-              onTap: () {},
-            ),
+  icon: Icons.fitness_center,
+  title: 'TRENING',
+  subtitle: 'Rozwijaj swoje umiejętności',
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TrainingScreen(
+          engine: engine,
+        ),
+      ),
+    ).then((_) {
+      // Odświeżymy ekran kariery po powrocie.
+      (context as Element).markNeedsBuild();
+    });
+  },
+),
 
             _menuButton(
               icon: Icons.bar_chart,
