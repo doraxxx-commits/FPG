@@ -10,6 +10,7 @@ import '../models/player.dart';
 import '../models/player_career.dart';
 import '../models/player_contract.dart';
 
+import '../simulation/aging_engine.dart';
 import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import '../simulation/match_engine.dart';
@@ -106,8 +107,12 @@ class GameEngine {
   }
 
   // ==========================================================
-  // NASTĘPNY DZIEŃ
+  // NASTĘPNY DZIEŃ / METODA COMPATIBILITY FOR UI
   // ==========================================================
+
+  void nextDay() {
+    advanceDay();
+  }
 
   void advanceDay() {
     state.nextDay();
@@ -116,19 +121,48 @@ class GameEngine {
 
     updatePlayerForm();
 
-    // KROK 30:
     // Trener podejmuje decyzję o statusie zawodnika.
     updateCareerPlayerMatchStatus();
 
     playMatchesForToday();
+
+    // Sprawdzenie zakończenia sezonu
+    if (leagueEngine.isSeasonComplete()) {
+      _advanceSeason();
+    }
   }
 
   // ==========================================================
-  // KROK 31
+  // PRZEJŚCIE DO NOWEGO SEZONU
+  // ==========================================================
+
+  void _advanceSeason() {
+    // 1. Uruchomienie silnika starzenia, rozwoju i regeneracji zawodników w całym świecie FPG
+    AgingEngine.processEndOfSeason(
+      allPlayers: players,
+      allClubs: clubs,
+    );
+
+    // 2. Starzenie gracza kariery
+    if (careerPlayer != null) {
+      careerPlayer!.age += 1;
+    }
+
+    // 3. Reset tabeli i wygenerowanie nowego terminarza
+    final leagueClubs = clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
+
+    fixtures = FixtureGenerator.generateDoubleRoundRobin(leagueClubs);
+    leagueEngine.resetSeason();
+  }
+
+  // ==========================================================
   // INFORMACJE O UDZIALE ZAWODNIKA W MECZU
   // ==========================================================
 
-  // Czy zawodnik może wystąpić w meczu.
   bool get careerPlayerCanPlay {
     if (careerPlayer == null) {
       return false;
@@ -148,7 +182,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 31
   // CZY ZAWODNIK JEST W KADRZE MECZOWEJ
   // ==========================================================
 
@@ -161,7 +194,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 31
   // CZY ZAWODNIK JEST W PODSTAWOWYM SKŁADZIE
   // ==========================================================
 
@@ -174,7 +206,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 31
   // STATUS MECZOWY ZAWODNIKA
   // ==========================================================
 
@@ -187,7 +218,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 32
   // WYSTĘP ZAWODNIKA W MECZU
   // ==========================================================
 
@@ -220,8 +250,7 @@ class GameEngine {
     // Aktualizacja decyzji trenera.
     player.updateMatchStatus();
 
-    // Jeżeli zawodnik nie może zagrać,
-    // nie występuje w meczu.
+    // Jeżeli zawodnik nie może zagrać, nie występuje w meczu.
     if (!player.canPlayMatch) {
       return;
     }
@@ -378,7 +407,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 32
   // OCENA ZAWODNIKA
   // ==========================================================
 
@@ -423,7 +451,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 32
   // GOLE ZAWODNIKA
   // ==========================================================
 
@@ -442,8 +469,7 @@ class GameEngine {
       return 0;
     }
 
-    // Im wyższe strzelanie zawodnika,
-    // tym większa szansa na gola.
+    // Im wyższe strzelanie zawodnika, tym większa szansa na gola.
     double chance =
         0.025 +
         (player.shooting * 0.0012);
@@ -468,7 +494,6 @@ class GameEngine {
         break;
     }
 
-    // Przeliczenie na liczbę okazji.
     final opportunities =
         max(1, teamGoals);
 
@@ -480,13 +505,10 @@ class GameEngine {
       }
     }
 
-    // Maksymalnie 3 gole w jednym meczu
-    // na tym etapie symulacji.
     return goals.clamp(0, 3);
   }
 
   // ==========================================================
-  // KROK 32
   // ASYSTY ZAWODNIKA
   // ==========================================================
 
@@ -588,11 +610,6 @@ class GameEngine {
       homeGoals: result.homeGoals,
       awayGoals: result.awayGoals,
     );
-
-    // ========================================================
-    // KROK 32
-    // OBSŁUGA WYSTĘPU NASZEGO ZAWODNIKA
-    // ========================================================
 
     processCareerPlayerMatch(
       fixture: fixture,
@@ -697,7 +714,6 @@ class GameEngine {
   }
 
   // ==========================================================
-  // KROK 30
   // DECYZJA TRENERA O STATUSIE ZAWODNIKA
   // ==========================================================
 
@@ -708,8 +724,7 @@ class GameEngine {
 
     final player = careerPlayer!;
 
-    // Jeżeli zawodnik nie ma klubu,
-    // nie może być wybierany do kadry.
+    // Jeżeli zawodnik nie ma klubu, nie może być wybierany do kadry.
     if (player.clubId == null) {
       player.inMatchSquad = false;
       player.isStarter = false;
@@ -717,14 +732,8 @@ class GameEngine {
       return;
     }
 
-    // Trener aktualizuje status na podstawie:
-    // - zaufania,
-    // - kondycji,
-    // - zmęczenia.
     player.updateMatchStatus();
 
-    // Jeżeli zawodnik nie może zagrać,
-    // nie może być podstawowym zawodnikiem.
     if (!player.canPlayMatch) {
       player.isStarter = false;
     }
@@ -751,13 +760,10 @@ class GameEngine {
 
     player.clubId = clubId;
 
-    // Numer zawodnika
     player.shirtNumber = 27;
 
-    // Początkowe zaufanie trenera.
     player.managerRelationship = 50;
 
-    // Początkowy status zawodnika.
     player.updateMatchStatus();
 
     final marketValue =
