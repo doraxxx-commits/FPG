@@ -27,6 +27,7 @@ class PlayerCareer {
 
   int stamina;
   int fitness;
+  int form;
 
   int morale;
   int happiness;
@@ -76,6 +77,7 @@ class PlayerCareer {
     required this.physical,
     this.stamina = 100,
     this.fitness = 100,
+    this.form = 70,
     this.morale = 75,
     this.happiness = 75,
     this.managerRelationship = 50,
