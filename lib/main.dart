@@ -220,6 +220,27 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 12),
 
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: engine.careerPlayer == null
+        ? null
+        : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PlayerProfileScreen(
+                  engine: engine,
+                ),
+              ),
+            );
+          },
+    child: const Text(
+      'PROFIL ZAWODNIKA',
+    ),
+  ),
+),
+
             // ==================================================
             // INFORMACJE O ZAWODNIKU
             // ==================================================
