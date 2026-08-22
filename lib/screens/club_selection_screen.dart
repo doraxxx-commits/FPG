@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
 import '../models/club.dart';
+import 'career_start_screen.dart';
 
 class ClubSelectionScreen extends StatelessWidget {
   final GameEngine engine;
@@ -54,16 +55,20 @@ class ClubSelectionScreen extends StatelessWidget {
   }
 
   void selectClub(
-    BuildContext context,
-    Club club,
-  ) {
-    engine.assignPlayerToClub(club.id);
+  BuildContext context,
+  Club club,
+) {
+  engine.assignPlayerToClub(club.id);
 
-    Navigator.popUntil(
-      context,
-      (route) => route.isFirst,
-    );
-  }
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CareerStartScreen(
+        engine: engine,
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
