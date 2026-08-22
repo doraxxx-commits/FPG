@@ -6,6 +6,8 @@ import '../models/player.dart';
 import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import 'game_state.dart';
+import '../models/match_result.dart';
+import '../simulation/match_engine.dart';
 
 class GameEngine {
   final GameState state;
@@ -13,6 +15,7 @@ class GameEngine {
   late final List<League> leagues;
   late final List<Club> clubs;
   late final List<Player> players;
+  late final MatchEngine matchEngine;
 
   late final LeagueEngine leagueEngine;
 
@@ -36,8 +39,37 @@ class GameEngine {
     fixtures = FixtureGenerator.generateDoubleRoundRobin(
       leagueClubs,
     );
-  }
+    
+    matchEngine = MatchEngine();
+  
+   MatchResult playFixture(Fixture fixture) {
+   final home = clubs.firstWhere(
+     (club) => club.id == fixture.homeClubId,
+   );
 
+   final away = clubs.firstWhere(
+     (club) => club.id == fixture.awayClubId,
+   );
+
+   final result = matchEngine.simulate(
+     home: home,
+     away: away,
+   );
+
+   fixture.played = true;
+   fixture.homeGoals = result.homeGoals;
+   fixture.awayGoals = result.awayGoals;
+
+   leagueEngine.recordMatch(
+     homeClubId: result.homeClubId,
+     awayClubId: result.awayClubId,
+     homeGoals: result.homeGoals,
+     awayGoals: result.awayGoals,
+   );
+
+   return result;
+ }
+  
   void advanceDay() {
     state.nextDay();
   }
