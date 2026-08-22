@@ -1,14 +1,18 @@
 import '../data/world_data.dart';
+
 import '../models/club.dart';
 import '../models/fixture.dart';
 import '../models/league.dart';
 import '../models/match_result.dart';
 import '../models/player.dart';
+import '../models/player_career.dart';
+import '../models/player_contract.dart';
+
 import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import '../simulation/match_engine.dart';
+
 import 'game_state.dart';
-import '../models/player_career.dart';
 import 'training_engine.dart';
 
 class GameEngine {
@@ -23,47 +27,11 @@ class GameEngine {
 
   late final List<Fixture> fixtures;
 
-  late final List<Fixture> fixtures;
-  
+  final TrainingEngine trainingEngine =
+      TrainingEngine();
+
   PlayerCareer? careerPlayer;
 
-  void createPlayer({
-  required String firstName,
-  required String lastName,
-  required String nationality,
-  required int age,
-  required int height,
-  required PlayerPosition position,
-  required int pace,
-  required int shooting,
-  required int passing,
-  required int dribbling,
-  required int defending,
-  required int physical,
-}) {
-  final player = PlayerCareer(
-    id: 'career_player_001',
-    firstName: firstName,
-    lastName: lastName,
-    nationality: nationality,
-    age: age,
-    height: height,
-    position: position,
-    overall: 1,
-    potential: 85,
-    pace: pace,
-    shooting: shooting,
-    passing: passing,
-    dribbling: dribbling,
-    defending: defending,
-    physical: physical,
-  );
-
-  player.refreshOverall();
-
-  careerPlayer = player;
-}
-  
   GameEngine({
     GameState? state,
   }) : state = state ?? GameState() {
@@ -81,16 +49,68 @@ class GameEngine {
 
     matchEngine = MatchEngine();
 
-    fixtures = FixtureGenerator.generateDoubleRoundRobin(
+    fixtures =
+        FixtureGenerator.generateDoubleRoundRobin(
       leagueClubs,
     );
   }
+
+  // ==========================================================
+  // TWORZENIE ZAWODNIKA
+  // ==========================================================
+
+  void createPlayer({
+    required String firstName,
+    required String lastName,
+    required String nationality,
+    required int age,
+    required int height,
+    required PlayerPosition position,
+    required int pace,
+    required int shooting,
+    required int passing,
+    required int dribbling,
+    required int defending,
+    required int physical,
+  }) {
+    final player = PlayerCareer(
+      id: 'career_player_001',
+      firstName: firstName,
+      lastName: lastName,
+      nationality: nationality,
+      age: age,
+      height: height,
+      position: position,
+      overall: 1,
+      potential: 85,
+      pace: pace,
+      shooting: shooting,
+      passing: passing,
+      dribbling: dribbling,
+      defending: defending,
+      physical: physical,
+    );
+
+    player.refreshOverall();
+
+    careerPlayer = player;
+  }
+
+  // ==========================================================
+  // DZIEŃ
+  // ==========================================================
 
   void advanceDay() {
     state.nextDay();
 
     playMatchesForToday();
+
+    recoverPlayer();
   }
+
+  // ==========================================================
+  // MECZE
+  // ==========================================================
 
   void playMatchesForToday() {
     for (final fixture in fixtures) {
@@ -102,114 +122,13 @@ class GameEngine {
           fixture.month == state.month &&
           fixture.day == state.day) {
         playFixture(fixture);
-     
-      final TrainingEngine trainingEngine =
-    TrainingEngine();
-
-        TrainingResult trainPlayer(
-  TrainingType type,
-) {
-  if (careerPlayer == null) {
-    throw StateError(
-      'Brak aktywnego zawodnika.',
-    );
-  }
-
-  final player = careerPlayer!;
-
-  final result = trainingEngine.train(
-    player,
-    type,
-  );
-
-  player.fatigue = (
-    player.fatigue +
-    result.fatigue
-  ).clamp(0, 100);
-
-  return result;
-
       }
     }
   }
 
-  void assignPlayerToClub(String clubId) {
-  if (careerPlayer == null) {
-    return;
-  }
-
-  final club = clubs.firstWhere(
-    (club) => club.id == clubId,
-  );
-
-  careerPlayer!.clubId = clubId;
-
-  final marketValue = calculateStartingMarketValue(
-    careerPlayer!,
-    club,
-  );
-
-  final salary = calculateStartingSalary(
-    careerPlayer!,
-    club,
-  );
-
-  careerPlayer!.contract = PlayerContract(
-    clubId: club.id,
-    yearsRemaining: 3,
-    weeklySalary: salary,
-    marketValue: marketValue,
-    squadNumber: 27,
-    squadStatus: 'Młody zawodnik',
-    managerTrust: 50,
-  );
-}
-
-  double calculateStartingMarketValue(
-  PlayerCareer player,
-  Club club,
-) {
-  final ageFactor = player.age <= 21
-      ? 1.25
-      : player.age <= 25
-          ? 1.10
-          : 0.90;
-
-  final potentialFactor =
-      player.potential / 70;
-
-  final clubFactor =
-      club.overall / 70;
-
-  return 250000 *
-      player.overall *
-      ageFactor *
-      potentialFactor *
-      clubFactor;
-}
-
-  double calculateStartingSalary(
-  PlayerCareer player,
-  Club club,
-) {
-  final baseSalary = 150.0;
-
-  final overallFactor =
-      player.overall / 50;
-
-  final clubFactor =
-      club.overall / 70;
-
-  return baseSalary *
-      overallFactor *
-      clubFactor;
-}
-
-  
-  careerPlayer!.clubId = clubId;
-}
-
-  MatchResult playFixture(Fixture fixture) {
+  MatchResult playFixture(
+    Fixture fixture,
+  ) {
     final home = clubs.firstWhere(
       (club) => club.id == fixture.homeClubId,
     );
@@ -224,18 +143,178 @@ class GameEngine {
     );
 
     fixture.played = true;
-    fixture.homeGoals = result.homeGoals;
-    fixture.awayGoals = result.awayGoals;
+
+    fixture.homeGoals =
+        result.homeGoals;
+
+    fixture.awayGoals =
+        result.awayGoals;
 
     leagueEngine.recordMatch(
-      homeClubId: result.homeClubId,
-      awayClubId: result.awayClubId,
-      homeGoals: result.homeGoals,
-      awayGoals: result.awayGoals,
+      homeClubId:
+          result.homeClubId,
+      awayClubId:
+          result.awayClubId,
+      homeGoals:
+          result.homeGoals,
+      awayGoals:
+          result.awayGoals,
     );
 
     return result;
   }
+
+  // ==========================================================
+  // TRENING
+  // ==========================================================
+
+  TrainingResult trainPlayer(
+    TrainingType type,
+  ) {
+    if (careerPlayer == null) {
+      throw StateError(
+        'Brak aktywnego zawodnika.',
+      );
+    }
+
+    final player = careerPlayer!;
+
+    final result =
+        trainingEngine.train(
+      player,
+      type,
+    );
+
+    player.fatigue =
+        (player.fatigue +
+                result.fatigue)
+            .clamp(0, 100);
+
+    player.fitness =
+        (player.fitness -
+                result.fatigue)
+            .clamp(0, 100);
+
+    player.refreshOverall();
+
+    return result;
+  }
+
+  // ==========================================================
+  // REGENERACJA
+  // ==========================================================
+
+  void recoverPlayer() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    player.fatigue =
+        (player.fatigue - 8)
+            .clamp(0, 100);
+
+    player.fitness =
+        (player.fitness + 8)
+            .clamp(0, 100);
+  }
+
+  // ==========================================================
+  // PRZYPISANIE DO KLUBU
+  // ==========================================================
+
+  void assignPlayerToClub(
+    String clubId,
+  ) {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final club = clubs.firstWhere(
+      (club) => club.id == clubId,
+    );
+
+    careerPlayer!.clubId =
+        clubId;
+
+    final marketValue =
+        calculateStartingMarketValue(
+      careerPlayer!,
+      club,
+    );
+
+    final salary =
+        calculateStartingSalary(
+      careerPlayer!,
+      club,
+    );
+
+    careerPlayer!.contract =
+        PlayerContract(
+      clubId: club.id,
+      yearsRemaining: 3,
+      weeklySalary: salary,
+      marketValue: marketValue,
+      squadNumber: 27,
+      squadStatus:
+          'Młody zawodnik',
+      managerTrust: 50,
+    );
+  }
+
+  // ==========================================================
+  // WARTOŚĆ ZAWODNIKA
+  // ==========================================================
+
+  double calculateStartingMarketValue(
+    PlayerCareer player,
+    Club club,
+  ) {
+    final ageFactor =
+        player.age <= 21
+            ? 1.25
+            : player.age <= 25
+                ? 1.10
+                : 0.90;
+
+    final potentialFactor =
+        player.potential / 70;
+
+    final clubFactor =
+        club.overall / 70;
+
+    return 250000 *
+        player.overall *
+        ageFactor *
+        potentialFactor *
+        clubFactor;
+  }
+
+  // ==========================================================
+  // PENSJA
+  // ==========================================================
+
+  double calculateStartingSalary(
+    PlayerCareer player,
+    Club club,
+  ) {
+    const baseSalary = 150.0;
+
+    final overallFactor =
+        player.overall / 50;
+
+    final clubFactor =
+        club.overall / 70;
+
+    return baseSalary *
+        overallFactor *
+        clubFactor;
+  }
+
+  // ==========================================================
+  // TERMINARZ
+  // ==========================================================
 
   List<Fixture> get todayFixtures {
     return fixtures.where(
@@ -258,6 +337,10 @@ class GameEngine {
     ).toList();
   }
 
+  // ==========================================================
+  // DATA / SEZON
+  // ==========================================================
+
   String get currentDate {
     return state.dateString;
   }
@@ -266,6 +349,10 @@ class GameEngine {
     return state.season;
   }
 
+  // ==========================================================
+  // OKNA TRANSFEROWE
+  // ==========================================================
+
   bool get summerTransferWindow {
     return state.transferWindowSummer;
   }
@@ -273,6 +360,10 @@ class GameEngine {
   bool get winterTransferWindow {
     return state.transferWindowWinter;
   }
+
+  // ==========================================================
+  // EKSTRAKLASA
+  // ==========================================================
 
   List<Club> get leagueClubs {
     return clubs.where(
