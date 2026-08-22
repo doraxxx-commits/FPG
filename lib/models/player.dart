@@ -130,4 +130,55 @@ class Player {
       88,
     );
   }
+
+  // ==========================================================
+  // SERIALIZACJA JSON (SAVE / LOAD)
+  // ==========================================================
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'age': age,
+      'position': position.name,
+      'pace': pace,
+      'shooting': shooting,
+      'passing': passing,
+      'dribbling': dribbling,
+      'defending': defending,
+      'physical': physical,
+      'value': value,
+      'weeklyWage': weeklyWage,
+      'clubId': clubId,
+      'morale': morale,
+      'fitness': fitness,
+      'form': form,
+      'fatigue': fatigue,
+    };
+  }
+
+  factory Player.fromJson(Map<String, dynamic> json) {
+    return Player(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      age: json['age'] as int,
+      position: PlayerPosition.values.firstWhere(
+        (e) => e.name == json['position'],
+        orElse: () => PlayerPosition.striker,
+      ),
+      pace: json['pace'] as int,
+      shooting: json['shooting'] as int,
+      passing: json['passing'] as int,
+      dribbling: json['dribbling'] as int,
+      defending: json['defending'] as int,
+      physical: json['physical'] as int,
+      value: json['value'] as int,
+      weeklyWage: json['weeklyWage'] as int,
+      clubId: json['clubId'] as String,
+      morale: json['morale'] as int? ?? 75,
+      fitness: json['fitness'] as int? ?? 100,
+      form: json['form'] as int? ?? 70,
+      fatigue: json['fatigue'] as int? ?? 0,
+    );
+  }
 }
