@@ -27,10 +27,13 @@ class GameEngine {
 
   late final List<Fixture> fixtures;
 
-  final TrainingEngine trainingEngine =
-      TrainingEngine();
+  final TrainingEngine trainingEngine = TrainingEngine();
 
   PlayerCareer? careerPlayer;
+
+  // ==========================================================
+  // KONSTRUKTOR
+  // ==========================================================
 
   GameEngine({
     GameState? state,
@@ -49,8 +52,7 @@ class GameEngine {
 
     matchEngine = MatchEngine();
 
-    fixtures =
-        FixtureGenerator.generateDoubleRoundRobin(
+    fixtures = FixtureGenerator.generateDoubleRoundRobin(
       leagueClubs,
     );
   }
@@ -97,15 +99,17 @@ class GameEngine {
   }
 
   // ==========================================================
-  // DZIEŃ
+  // NASTĘPNY DZIEŃ
   // ==========================================================
 
   void advanceDay() {
     state.nextDay();
 
-    playMatchesForToday();
-
     recoverPlayer();
+
+    updatePlayerForm();
+
+    playMatchesForToday();
   }
 
   // ==========================================================
@@ -144,21 +148,14 @@ class GameEngine {
 
     fixture.played = true;
 
-    fixture.homeGoals =
-        result.homeGoals;
-
-    fixture.awayGoals =
-        result.awayGoals;
+    fixture.homeGoals = result.homeGoals;
+    fixture.awayGoals = result.awayGoals;
 
     leagueEngine.recordMatch(
-      homeClubId:
-          result.homeClubId,
-      awayClubId:
-          result.awayClubId,
-      homeGoals:
-          result.homeGoals,
-      awayGoals:
-          result.awayGoals,
+      homeClubId: result.homeClubId,
+      awayClubId: result.awayClubId,
+      homeGoals: result.homeGoals,
+      awayGoals: result.awayGoals,
     );
 
     return result;
@@ -179,21 +176,24 @@ class GameEngine {
 
     final player = careerPlayer!;
 
-    final result =
-        trainingEngine.train(
+    if (player.fatigue >= 90) {
+      throw StateError(
+        'Zawodnik jest zbyt zmęczony na kolejny trening.',
+      );
+    }
+
+    final result = trainingEngine.train(
       player,
       type,
     );
 
-    player.fatigue =
-        (player.fatigue +
-                result.fatigue)
-            .clamp(0, 100);
+    player.fatigue = (
+      player.fatigue + result.fatigue
+    ).clamp(0, 100);
 
-    player.fitness =
-        (player.fitness -
-                result.fatigue)
-            .clamp(0, 100);
+    player.fitness = (
+      player.fitness - result.fatigue
+    ).clamp(0, 100);
 
     player.refreshOverall();
 
@@ -205,42 +205,52 @@ class GameEngine {
   // ==========================================================
 
   void recoverPlayer() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    final recovery = player.fatigue >= 70
+        ? 5
+        : player.fatigue >= 40
+            ? 8
+            : 10;
+
+    player.fatigue = (
+      player.fatigue - recovery
+    ).clamp(0, 100);
+
+    player.fitness = (
+      player.fitness + recovery
+    ).clamp(0, 100);
+  }
+
+  // ==========================================================
+  // FORMA ZAWODNIKA
+  // ==========================================================
+
   void updatePlayerForm() {
-  if (careerPlayer == null) {
-    return;
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    if (player.fatigue >= 80) {
+      player.form = (
+        player.form - 2
+      ).clamp(0, 100);
+    } else if (player.fatigue >= 60) {
+      player.form = (
+        player.form - 1
+      ).clamp(0, 100);
+    } else if (player.fatigue <= 25) {
+      player.form = (
+        player.form + 1
+      ).clamp(0, 100);
+    }
   }
-
-  final player = careerPlayer!;
-
-  if (player.fatigue >= 80) {
-    player.form =
-        (player.form - 2)
-            .clamp(0, 100);
-  } else if (player.fatigue >= 60) {
-    player.form =
-        (player.form - 1)
-            .clamp(0, 100);
-  } else if (player.fatigue <= 25) {
-    player.form =
-        (player.form + 1)
-            .clamp(0, 100);
-  }
-}
-
-  final recovery = player.fatigue >= 70
-      ? 5
-      : player.fatigue >= 40
-          ? 8
-          : 10;
-
-  player.fatigue =
-      (player.fatigue - recovery)
-          .clamp(0, 100);
-
-  player.fitness =
-      (player.fitness + recovery)
-          .clamp(0, 100);
-}
 
   // ==========================================================
   // PRZYPISANIE DO KLUBU
@@ -257,8 +267,7 @@ class GameEngine {
       (club) => club.id == clubId,
     );
 
-    careerPlayer!.clubId =
-        clubId;
+    careerPlayer!.clubId = clubId;
 
     final marketValue =
         calculateStartingMarketValue(
@@ -272,33 +281,30 @@ class GameEngine {
       club,
     );
 
-    careerPlayer!.contract =
-        PlayerContract(
+    careerPlayer!.contract = PlayerContract(
       clubId: club.id,
       yearsRemaining: 3,
       weeklySalary: salary,
       marketValue: marketValue,
       squadNumber: 27,
-      squadStatus:
-          'Młody zawodnik',
+      squadStatus: 'Młody zawodnik',
       managerTrust: 50,
     );
   }
 
   // ==========================================================
-  // WARTOŚĆ ZAWODNIKA
+  // WARTOŚĆ POCZĄTKOWA ZAWODNIKA
   // ==========================================================
 
   double calculateStartingMarketValue(
     PlayerCareer player,
     Club club,
   ) {
-    final ageFactor =
-        player.age <= 21
-            ? 1.25
-            : player.age <= 25
-                ? 1.10
-                : 0.90;
+    final ageFactor = player.age <= 21
+        ? 1.25
+        : player.age <= 25
+            ? 1.10
+            : 0.90;
 
     final potentialFactor =
         player.potential / 70;
@@ -314,7 +320,7 @@ class GameEngine {
   }
 
   // ==========================================================
-  // PENSJA
+  // PENSJA POCZĄTKOWA
   // ==========================================================
 
   double calculateStartingSalary(
@@ -360,31 +366,39 @@ class GameEngine {
   }
 
   // ==========================================================
-  // DATA / SEZON
+  // DATA
   // ==========================================================
 
   String get currentDate {
     return state.dateString;
   }
 
+  // ==========================================================
+  // SEZON
+  // ==========================================================
+
   int get currentSeason {
     return state.season;
   }
 
   // ==========================================================
-  // OKNA TRANSFEROWE
+  // OKNO TRANSFEROWE - LATO
   // ==========================================================
 
   bool get summerTransferWindow {
     return state.transferWindowSummer;
   }
 
+  // ==========================================================
+  // OKNO TRANSFEROWE - ZIMA
+  // ==========================================================
+
   bool get winterTransferWindow {
     return state.transferWindowWinter;
   }
 
   // ==========================================================
-  // EKSTRAKLASA
+  // KLUBY EKSTRAKLASY
   // ==========================================================
 
   List<Club> get leagueClubs {
