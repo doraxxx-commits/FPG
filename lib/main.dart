@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/game_engine.dart';
+import 'models/player.dart';
 
 void main() {
   runApp(const FPGApp());
@@ -33,6 +34,25 @@ class FPGHomePage extends StatefulWidget {
 class _FPGHomePageState extends State<FPGHomePage> {
   final GameEngine engine = GameEngine();
 
+  void createTestPlayer() {
+  setState(() {
+    engine.createPlayer(
+      firstName: 'Dominik',
+      lastName: 'Nowak',
+      nationality: 'Polska',
+      age: 18,
+      height: 178,
+      position: PlayerPosition.winger,
+      pace: 82,
+      shooting: 70,
+      passing: 68,
+      dribbling: 84,
+      defending: 35,
+      physical: 65,
+    );
+  });
+}
+  
   void nextDay() {
     setState(() {
       engine.advanceDay();
