@@ -58,7 +58,26 @@ class Player {
   }
 }
   
-  int potential;
+  int get potential {
+  final basePotential = overall + 10;
+
+  if (age <= 18) {
+    return basePotential.clamp(60, 94);
+  }
+
+  if (age <= 21) {
+    return basePotential.clamp(60, 92);
+  }
+
+  if (age <= 24) {
+    return basePotential.clamp(60, 90);
+  }
+
+  return basePotential.clamp(
+    overall,
+    88,
+  );
+}
 
   int pace;
   int shooting;
