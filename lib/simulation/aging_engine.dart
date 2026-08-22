@@ -13,7 +13,6 @@ class AgingEngine {
     'Nowak', 'Rossi', 'Silva', 'Müller', 'Kowalski', 'Garcia', 'Weber', 'Wiśniewski', 'Zieliński', 'Dubois', 'Martins'
   ];
 
-  /// Symulacja starzenia i rozwoju wykonywana na koniec każdego sezonu
   static void processEndOfSeason({
     required List<Player> allPlayers,
     required List<Club> allClubs,
@@ -21,10 +20,8 @@ class AgingEngine {
     final List<Player> retiredPlayers = [];
 
     for (final player in allPlayers) {
-      // 1. Dodajemy 1 rok do wieku
       player.age += 1;
 
-      // 2. LOGIKA ROZWOJU (Młodzi piłkarze do 26 lat)
       if (player.age <= 26 && player.overall < player.potential) {
         final gap = player.potential - player.overall;
         final growth = (gap * (0.15 + _rnd.nextDouble() * 0.15)).round().clamp(1, 4);
@@ -35,7 +32,6 @@ class AgingEngine {
         player.dribbling = (player.dribbling + growth).clamp(1, 99);
       }
 
-      // 3. LOGIKA STARZENIA (Po 30. roku życia)
       if (player.age >= 31) {
         final ovrFactor = (100 - player.overall) / 100.0;
         final ageFactor = (player.age - 30) * 0.3;
@@ -48,7 +44,6 @@ class AgingEngine {
         }
       }
 
-      // 4. LOGIKA EMERYTURY (Zakres 32 – 48 lat)
       if (player.age >= 32) {
         bool shouldRetire = false;
 
@@ -73,7 +68,6 @@ class AgingEngine {
       }
     }
 
-    // 5. USUWANIE EMERYTÓW I GENEROWANIE REGENÓW
     for (final retired in retiredPlayers) {
       allPlayers.remove(retired);
       final regen = _generateRegen(retired.clubId, retired.position);
@@ -81,7 +75,6 @@ class AgingEngine {
     }
   }
 
-  // Generowanie nowego młodego zawodnika (Regen)
   static Player _generateRegen(String? clubId, PlayerPosition position) {
     final fName = _firstNames[_rnd.nextInt(_firstNames.length)];
     final lName = _lastNames[_rnd.nextInt(_lastNames.length)];
@@ -89,8 +82,7 @@ class AgingEngine {
 
     return Player(
       id: 'regen_${DateTime.now().millisecondsSinceEpoch}_${_rnd.nextInt(9999)}',
-      firstName: fName,
-      lastName: lName,
+      name: '$fName $lName',
       age: 17 + _rnd.nextInt(3),
       position: position,
       overall: baseStat,
