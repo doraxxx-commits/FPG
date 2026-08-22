@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/game_engine.dart';
 import '../database/save_manager.dart';
 import 'league_table_screen.dart';
+import 'match_screen.dart';
 import 'training_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
@@ -227,7 +228,7 @@ class CareerHomeScreen extends StatelessWidget {
                 ),
 
                 subtitle: const Text(
-                  'Symuluj mecze i przejdź do kolejnego dnia',
+                  'Przejdź do meczu i zsymuluj kolejkę',
                 ),
 
                 trailing: const Icon(
@@ -237,21 +238,16 @@ class CareerHomeScreen extends StatelessWidget {
                 ),
 
                 onTap: () {
-                  // Przechodzimy do kolejnego dnia w GameEngine
-                  try {
-                    engine.nextDay();
-                  } catch (_) {
-                    // W razie braku metody nextDay, fallback na podpięcie mechaniki
-                  }
-
-                  (context as Element).markNeedsBuild();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Postęp dnia został wykonany!'),
-                      duration: Duration(seconds: 1),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MatchScreen(
+                        engine: engine,
+                      ),
                     ),
-                  );
+                  ).then((_) {
+                    (context as Element).markNeedsBuild();
+                  });
                 },
               ),
             ),
