@@ -51,6 +51,10 @@ class PlayerCareer {
   int managerRelationship;
   int teamRelationship;
 
+  // ==========================================================
+  // DOŚWIADCZENIE
+  // ==========================================================
+
   int experience;
   int experienceToNextLevel;
 
@@ -61,6 +65,18 @@ class PlayerCareer {
   String? clubId;
 
   int shirtNumber;
+
+  // ==========================================================
+  // STATUS W KADRZE
+  // ==========================================================
+
+  String squadStatus;
+
+  // Czy zawodnik znajduje się w kadrze meczowej
+  bool inMatchSquad;
+
+  // Czy zawodnik jest aktualnie podstawowym zawodnikiem
+  bool isStarter;
 
   PlayerContract? contract;
 
@@ -99,29 +115,42 @@ class PlayerCareer {
     required this.defending,
     required this.physical,
 
+    // Forma / kondycja
     this.stamina = 100,
     this.fitness = 100,
     this.fatigue = 0,
     this.form = 70,
 
+    // Psychologia
     this.morale = 75,
     this.happiness = 75,
 
+    // Relacje
     this.managerRelationship = 50,
     this.teamRelationship = 50,
+
+    // Doświadczenie
     this.experience = 0,
     this.experienceToNextLevel = 100,
 
+    // Klub
     this.clubId,
-
     this.shirtNumber = 1,
 
+    // Status w kadrze
+    this.squadStatus = 'Młody zawodnik',
+    this.inMatchSquad = false,
+    this.isStarter = false,
+
+    // Kontrakt
     this.contract,
 
+    // Statystyki kariery
     this.careerGoals = 0,
     this.careerAssists = 0,
     this.careerAppearances = 0,
 
+    // Statystyki meczowe
     PlayerMatchStats? matchStats,
   }) : matchStats = matchStats ?? PlayerMatchStats();
 
@@ -202,6 +231,7 @@ class PlayerCareer {
 
   void addCareerGoal() {
     careerGoals++;
+
     matchStats.addGoal();
   }
 
@@ -211,6 +241,7 @@ class PlayerCareer {
 
   void addCareerAssist() {
     careerAssists++;
+
     matchStats.addAssist();
   }
 
