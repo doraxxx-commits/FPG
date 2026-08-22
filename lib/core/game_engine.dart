@@ -105,6 +105,14 @@ class GameEngine {
     }
   }
 
+  void assignPlayerToClub(String clubId) {
+  if (careerPlayer == null) {
+    return;
+  }
+
+  careerPlayer!.clubId = clubId;
+}
+
   MatchResult playFixture(Fixture fixture) {
     final home = clubs.firstWhere(
       (club) => club.id == fixture.homeClubId,
