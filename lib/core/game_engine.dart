@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../data/world_data.dart';
 
 import '../models/club.dart';
@@ -28,6 +30,8 @@ class GameEngine {
   late final List<Fixture> fixtures;
 
   final TrainingEngine trainingEngine = TrainingEngine();
+
+  final Random _random = Random();
 
   PlayerCareer? careerPlayer;
 
@@ -183,6 +187,363 @@ class GameEngine {
   }
 
   // ==========================================================
+  // KROK 32
+  // WYSTĘP ZAWODNIKA W MECZU
+  // ==========================================================
+
+  void processCareerPlayerMatch({
+    required Fixture fixture,
+    required MatchResult result,
+  }) {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    // Zawodnik bez klubu nie może wystąpić.
+    if (player.clubId == null) {
+      return;
+    }
+
+    // Sprawdzamy, czy jego klub gra w tym meczu.
+    final playerClubIsHome =
+        fixture.homeClubId == player.clubId;
+
+    final playerClubIsAway =
+        fixture.awayClubId == player.clubId;
+
+    if (!playerClubIsHome && !playerClubIsAway) {
+      return;
+    }
+
+    // Aktualizacja decyzji trenera.
+    player.updateMatchStatus();
+
+    // Jeżeli zawodnik nie może zagrać,
+    // nie występuje w meczu.
+    if (!player.canPlayMatch) {
+      return;
+    }
+
+    bool started = false;
+    int minutes = 0;
+
+    // ========================================================
+    // PODSTAWOWY ZAWODNIK
+    // ========================================================
+
+    if (player.isStarter) {
+      started = true;
+
+      // Podstawowy zawodnik zazwyczaj gra cały mecz,
+      // ale czasami zostaje zmieniony.
+      final chanceOfFullMatch = _random.nextInt(100);
+
+      if (chanceOfFullMatch < 75) {
+        minutes = 90;
+      } else {
+        minutes = 60 + _random.nextInt(25);
+      }
+    }
+
+    // ========================================================
+    // REZERWOWY / ROTACJA
+    // ========================================================
+
+    else if (player.inMatchSquad) {
+      // Szansa wejścia z ławki.
+      final substitutionChance = _random.nextInt(100);
+
+      if (substitutionChance < 60) {
+        started = false;
+
+        // Wejście zazwyczaj między 55. a 80. minutą.
+        final substitutionMinute =
+            55 + _random.nextInt(26);
+
+        minutes = 90 - substitutionMinute;
+
+        // Minimum 10 minut.
+        if (minutes < 10) {
+          minutes = 10;
+        }
+      } else {
+        // Został na ławce.
+        minutes = 0;
+      }
+    }
+
+    // ========================================================
+    // BRAK WYSTĘPU
+    // ========================================================
+
+    if (minutes <= 0) {
+      return;
+    }
+
+    // ========================================================
+    // OCENA MECZOWA
+    // ========================================================
+
+    final rating = _calculateCareerPlayerMatchRating(
+      player: player,
+      result: result,
+      playerClubIsHome: playerClubIsHome,
+      started: started,
+    );
+
+    // ========================================================
+    // GOLE
+    // ========================================================
+
+    final goals = _calculateCareerPlayerGoals(
+      player: player,
+      result: result,
+      playerClubIsHome: playerClubIsHome,
+      minutes: minutes,
+    );
+
+    // ========================================================
+    // ASYSTY
+    // ========================================================
+
+    final assists = _calculateCareerPlayerAssists(
+      player: player,
+      result: result,
+      playerClubIsHome: playerClubIsHome,
+      minutes: minutes,
+    );
+
+    // ========================================================
+    // STATYSTYKI KARIERY
+    // ========================================================
+
+    player.addCareerAppearance(
+      minutes: minutes,
+      started: started,
+      rating: rating,
+    );
+
+    // Dodajemy gole.
+    for (int i = 0; i < goals; i++) {
+      player.addCareerGoal();
+    }
+
+    // Dodajemy asysty.
+    for (int i = 0; i < assists; i++) {
+      player.addCareerAssist();
+    }
+
+    // ========================================================
+    // ZMĘCZENIE PO MECZU
+    // ========================================================
+
+    final matchFatigue =
+        started
+            ? 25 + ((minutes - 60) ~/ 6)
+            : 8 + (minutes ~/ 5);
+
+    player.fatigue = (
+      player.fatigue + matchFatigue
+    ).clamp(0, 100);
+
+    player.fitness = (
+      player.fitness - matchFatigue
+    ).clamp(0, 100);
+
+    // ========================================================
+    // FORMA
+    // ========================================================
+
+    if (rating >= 7.5) {
+      player.form = (
+        player.form + 3
+      ).clamp(0, 100);
+    } else if (rating >= 7.0) {
+      player.form = (
+        player.form + 2
+      ).clamp(0, 100);
+    } else if (rating < 5.5) {
+      player.form = (
+        player.form - 2
+      ).clamp(0, 100);
+    } else if (rating < 6.0) {
+      player.form = (
+        player.form - 1
+      ).clamp(0, 100);
+    }
+
+    player.refreshOverall();
+  }
+
+  // ==========================================================
+  // KROK 32
+  // OCENA ZAWODNIKA
+  // ==========================================================
+
+  double _calculateCareerPlayerMatchRating({
+    required PlayerCareer player,
+    required MatchResult result,
+    required bool playerClubIsHome,
+    required bool started,
+  }) {
+    double rating = 6.0;
+
+    final playerClubGoals =
+        playerClubIsHome
+            ? result.homeGoals
+            : result.awayGoals;
+
+    final opponentGoals =
+        playerClubIsHome
+            ? result.awayGoals
+            : result.homeGoals;
+
+    // Wynik meczu.
+    if (playerClubGoals > opponentGoals) {
+      rating += 0.7;
+    } else if (playerClubGoals < opponentGoals) {
+      rating -= 0.6;
+    }
+
+    // Podstawowy zawodnik dostaje większy wpływ wyniku.
+    if (started) {
+      rating += 0.2;
+    } else {
+      rating -= 0.1;
+    }
+
+    // Mały losowy element.
+    rating += (
+      _random.nextDouble() * 1.2
+    ) - 0.6;
+
+    return rating.clamp(4.0, 9.5);
+  }
+
+  // ==========================================================
+  // KROK 32
+  // GOLE ZAWODNIKA
+  // ==========================================================
+
+  int _calculateCareerPlayerGoals({
+    required PlayerCareer player,
+    required MatchResult result,
+    required bool playerClubIsHome,
+    required int minutes,
+  }) {
+    final teamGoals =
+        playerClubIsHome
+            ? result.homeGoals
+            : result.awayGoals;
+
+    if (teamGoals <= 0 || minutes < 10) {
+      return 0;
+    }
+
+    // Im wyższe strzelanie zawodnika,
+    // tym większa szansa na gola.
+    double chance =
+        0.025 +
+        (player.shooting * 0.0012);
+
+    // Napastnicy i skrzydłowi mają większą szansę.
+    switch (player.position) {
+      case PlayerPosition.striker:
+        chance += 0.025;
+        break;
+
+      case PlayerPosition.winger:
+        chance += 0.015;
+        break;
+
+      case PlayerPosition.midfielder:
+        chance += 0.005;
+        break;
+
+      case PlayerPosition.defender:
+      case PlayerPosition.goalkeeper:
+        chance -= 0.005;
+        break;
+    }
+
+    // Przeliczenie na liczbę okazji.
+    final opportunities =
+        max(1, teamGoals);
+
+    int goals = 0;
+
+    for (int i = 0; i < opportunities; i++) {
+      if (_random.nextDouble() < chance) {
+        goals++;
+      }
+    }
+
+    // Maksymalnie 3 gole w jednym meczu
+    // na tym etapie symulacji.
+    return goals.clamp(0, 3);
+  }
+
+  // ==========================================================
+  // KROK 32
+  // ASYSTY ZAWODNIKA
+  // ==========================================================
+
+  int _calculateCareerPlayerAssists({
+    required PlayerCareer player,
+    required MatchResult result,
+    required bool playerClubIsHome,
+    required int minutes,
+  }) {
+    final teamGoals =
+        playerClubIsHome
+            ? result.homeGoals
+            : result.awayGoals;
+
+    if (teamGoals <= 0 || minutes < 10) {
+      return 0;
+    }
+
+    double chance =
+        0.015 +
+        (player.passing * 0.0009);
+
+    // Pomocnicy i skrzydłowi częściej asystują.
+    switch (player.position) {
+      case PlayerPosition.midfielder:
+        chance += 0.025;
+        break;
+
+      case PlayerPosition.winger:
+        chance += 0.020;
+        break;
+
+      case PlayerPosition.striker:
+        chance += 0.010;
+        break;
+
+      case PlayerPosition.defender:
+        chance += 0.005;
+        break;
+
+      case PlayerPosition.goalkeeper:
+        chance -= 0.005;
+        break;
+    }
+
+    int assists = 0;
+
+    for (int i = 0; i < teamGoals; i++) {
+      if (_random.nextDouble() < chance) {
+        assists++;
+      }
+    }
+
+    return assists.clamp(0, 3);
+  }
+
+  // ==========================================================
   // MECZE
   // ==========================================================
 
@@ -226,6 +587,16 @@ class GameEngine {
       awayClubId: result.awayClubId,
       homeGoals: result.homeGoals,
       awayGoals: result.awayGoals,
+    );
+
+    // ========================================================
+    // KROK 32
+    // OBSŁUGA WYSTĘPU NASZEGO ZAWODNIKA
+    // ========================================================
+
+    processCareerPlayerMatch(
+      fixture: fixture,
+      result: result,
     );
 
     return result;
