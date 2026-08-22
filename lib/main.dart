@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/game_engine.dart';
 import 'models/player.dart';
 import 'screens/create_player_screen.dart';
+import 'screens/training_screen.dart';
 
 void main() {
   runApp(const FPGApp());
@@ -19,6 +20,7 @@ class FPGApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFF080A0F),
       ),
       home: const FPGHomePage(),
     );
@@ -36,29 +38,6 @@ class _FPGHomePageState extends State<FPGHomePage> {
   final GameEngine engine = GameEngine();
 
   // ============================================================
-  // TESTOWY ZAWODNIK
-  // ============================================================
-
-  void createTestPlayer() {
-    setState(() {
-      engine.createPlayer(
-        firstName: 'Dominik',
-        lastName: 'Nowak',
-        nationality: 'Polska',
-        age: 18,
-        height: 178,
-        position: PlayerPosition.winger,
-        pace: 82,
-        shooting: 70,
-        passing: 68,
-        dribbling: 84,
-        defending: 35,
-        physical: 65,
-      );
-    });
-  }
-
-  // ============================================================
   // CZAS GRY
   // ============================================================
 
@@ -69,12 +48,51 @@ class _FPGHomePageState extends State<FPGHomePage> {
   }
 
   // ============================================================
+  // NOWA KARIERA
+  // ============================================================
+
+  void openCreatePlayer() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePlayerScreen(
+          engine: engine,
+        ),
+      ),
+    ).then((_) {
+      setState(() {});
+    });
+  }
+
+  // ============================================================
+  // TRENING
+  // ============================================================
+
+  void openTraining() {
+    if (engine.careerPlayer == null) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TrainingScreen(
+          engine: engine,
+        ),
+      ),
+    ).then((_) {
+      setState(() {});
+    });
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
   @override
   Widget build(BuildContext context) {
     final table = engine.leagueEngine.table;
+    final player = engine.careerPlayer;
 
     return Scaffold(
       backgroundColor: const Color(0xFF080A0F),
@@ -84,7 +102,12 @@ class _FPGHomePageState extends State<FPGHomePage> {
       // ========================================================
 
       appBar: AppBar(
-        title: const Text('FPG'),
+        title: const Text(
+          'FPG',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: const Color(0xFF080A0F),
       ),
 
@@ -169,112 +192,160 @@ class _FPGHomePageState extends State<FPGHomePage> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // ==================================================
-            // TESTOWY ZAWODNIK
+            // NOWA KARIERA
             // ==================================================
 
             SizedBox(
               width: double.infinity,
 
-              child: ElevatedButton(
-                onPressed: createTestPlayer,
+              child: ElevatedButton.icon(
+                onPressed: openCreatePlayer,
 
-                child: const Text(
-                  'STWÓRZ ZAWODNIKA TESTOWEGO',
+                icon: const Icon(
+                  Icons.person_add,
+                ),
+
+                label: const Text(
+                  'NOWA KARIERA',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 12),
 
-SizedBox(
-  width: double.infinity,
-  child: ElevatedButton(
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CreatePlayerScreen(
-            engine: engine,
-          ),
-        ),
-      );
-    },
-    child: const Text(
-      'NOWA KARIERA',
-    ),
-  ),
-),
-
             // ==================================================
             // INFORMACJE O ZAWODNIKU
             // ==================================================
 
-            if (engine.careerPlayer != null)
+            if (player != null)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
 
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
 
                     children: [
                       Text(
-                        engine.careerPlayer!.fullName,
+                        player.fullName,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
 
                       Text(
-                        'OVR ${engine.careerPlayer!.overall}',
+                        '${player.position.name.toUpperCase()}  •  '
+                        'Wiek ${player.age}',
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
 
-                      Text(
-                        'Wiek: ${engine.careerPlayer!.age}',
-                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _playerInfo(
+                              'OVR',
+                              '${player.overall}',
+                            ),
+                          ),
 
-                      Text(
-                        'Wzrost: '
-                        '${engine.careerPlayer!.height} cm',
-                      ),
-
-                      Text(
-                        'Potencjał: '
-                        '${engine.careerPlayer!.potential}',
+                          Expanded(
+                            child: _playerInfo(
+                              'POT',
+                              '${player.potential}',
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 12),
 
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _playerInfo(
+                              'FITNESS',
+                              '${player.fitness}',
+                            ),
+                          ),
+
+                          Expanded(
+                            child: _playerInfo(
+                              'FORMA',
+                              '${player.form}',
+                            ),
+                          ),
+
+                          Expanded(
+                            child: _playerInfo(
+                              'ZMĘCZENIE',
+                              '${player.fatigue}',
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
                       Text(
-                        'PACE ${engine.careerPlayer!.pace}  •  '
-                        'SHO ${engine.careerPlayer!.shooting}',
+                        'PACE ${player.pace}  •  '
+                        'SHO ${player.shooting}',
                       ),
 
                       Text(
-                        'PAS ${engine.careerPlayer!.passing}  •  '
-                        'DRI ${engine.careerPlayer!.dribbling}',
+                        'PAS ${player.passing}  •  '
+                        'DRI ${player.dribbling}',
                       ),
 
                       Text(
-                        'DEF ${engine.careerPlayer!.defending}  •  '
-                        'PHY ${engine.careerPlayer!.physical}',
+                        'DEF ${player.defending}  •  '
+                        'PHY ${player.physical}',
                       ),
                     ],
                   ),
                 ),
               ),
+
+            // ==================================================
+            // TRENING
+            // ==================================================
+
+            if (player != null) ...[
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+
+                child: ElevatedButton.icon(
+                  onPressed: openTraining,
+
+                  icon: const Icon(
+                    Icons.fitness_center,
+                  ),
+
+                  label: const Text(
+                    'TRENING',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 24),
 
@@ -305,11 +376,13 @@ SizedBox(
 
             ...engine.todayFixtures.map((fixture) {
               final home = engine.clubs.firstWhere(
-                (club) => club.id == fixture.homeClubId,
+                (club) =>
+                    club.id == fixture.homeClubId,
               );
 
               final away = engine.clubs.firstWhere(
-                (club) => club.id == fixture.awayClubId,
+                (club) =>
+                    club.id == fixture.awayClubId,
               );
 
               return Card(
@@ -346,13 +419,17 @@ SizedBox(
 
             const SizedBox(height: 10),
 
-            ...engine.upcomingFixtures.take(5).map((fixture) {
+            ...engine.upcomingFixtures
+                .take(5)
+                .map((fixture) {
               final home = engine.clubs.firstWhere(
-                (club) => club.id == fixture.homeClubId,
+                (club) =>
+                    club.id == fixture.homeClubId,
               );
 
               final away = engine.clubs.firstWhere(
-                (club) => club.id == fixture.awayClubId,
+                (club) =>
+                    club.id == fixture.awayClubId,
               );
 
               return Card(
@@ -386,47 +463,93 @@ SizedBox(
 
             const SizedBox(height: 10),
 
-            ...List.generate(table.length, (index) {
-              final standing = table[index];
+            ...List.generate(
+              table.length,
+              (index) {
+                final standing =
+                    table[index];
 
-              final club = engine.clubs.firstWhere(
-                (club) => club.id == standing.clubId,
-              );
+                final club =
+                    engine.clubs.firstWhere(
+                  (club) =>
+                      club.id ==
+                      standing.clubId,
+                );
 
-              return Card(
-                child: ListTile(
-                  leading: SizedBox(
-                    width: 30,
+                return Card(
+                  child: ListTile(
+                    leading: SizedBox(
+                      width: 30,
 
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      child: Text(
+                        '${index + 1}',
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    title: Text(
+                      club.name,
+                    ),
+
+                    subtitle: Text(
+                      'OVR ${club.overall}  •  '
+                      '${standing.played} meczów',
+                    ),
+
+                    trailing: Text(
+                      '${standing.points} pkt',
+
+                      style:
+                          const TextStyle(
+                        fontWeight:
+                            FontWeight.bold,
                       ),
                     ),
                   ),
-
-                  title: Text(
-                    club.name,
-                  ),
-
-                  subtitle: Text(
-                    'OVR ${club.overall}  •  '
-                    '${standing.played} meczów',
-                  ),
-
-                  trailing: Text(
-                    '${standing.points} pkt',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            }),
+                );
+              },
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  // ============================================================
+  // MAŁY WIDGET INFORMACJI O ZAWODNIKU
+  // ============================================================
+
+  Widget _playerInfo(
+    String title,
+    String value,
+  ) {
+    return Column(
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
+
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+          ),
+        ),
+
+        const SizedBox(height: 2),
+
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }
