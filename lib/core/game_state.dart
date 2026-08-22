@@ -66,4 +66,37 @@ class GameState {
 
     return '$dayString.$monthString.$year';
   }
+
+  import '../models/player.dart';
+
+class GameState {
+  Player? player;
+  DateTime currentDate;
+  int currentSeason;
+
+  GameState({
+    this.player,
+    required this.currentDate,
+    this.currentSeason = 1,
+  });
+
+  // Konwersja obiektu do Mapy (JSON)
+  Map<String, dynamic> toJson() {
+    return {
+      'player': player?.toJson(),
+      'currentDate': currentDate.toIso8601String(),
+      'currentSeason': currentSeason,
+    };
+  }
+
+  // Tworzenie obiektu z Mapy (JSON)
+  factory GameState.fromJson(Map<String, dynamic> json) {
+    return GameState(
+      player: json['player'] != null ? Player.fromJson(json['player']) : null,
+      currentDate: DateTime.parse(json['currentDate']),
+      currentSeason: json['currentSeason'] ?? 1,
+    );
+  }
+}
+
 }
