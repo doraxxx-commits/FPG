@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
+import '../database/save_manager.dart';
 import 'training_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
@@ -37,6 +38,28 @@ class CareerHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('FPG'),
         backgroundColor: const Color(0xFF080A0F),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            tooltip: 'Zapisz grę',
+            onPressed: () async {
+              final success = await SaveManager.saveGame(engine.gameState);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Gra została pomyślnie zapisana!'
+                          : 'Błąd podczas zapisu gry.',
+                    ),
+                    backgroundColor:
+                        success ? Colors.green[800] : Colors.red[800],
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
 
       body: SafeArea(
@@ -53,8 +76,7 @@ class CareerHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(18),
 
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
                     Text(
@@ -115,8 +137,7 @@ class CareerHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
 
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
                     const Text(
@@ -130,8 +151,7 @@ class CareerHomeScreen extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
                         const Text(
@@ -150,8 +170,7 @@ class CareerHomeScreen extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
                         const Text(
@@ -170,8 +189,7 @@ class CareerHomeScreen extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     LinearProgressIndicator(
-                      value:
-                          contract.managerTrust / 100,
+                      value: contract.managerTrust / 100,
                     ),
                   ],
                 ),
@@ -232,23 +250,22 @@ class CareerHomeScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             _menuButton(
-  icon: Icons.fitness_center,
-  title: 'TRENING',
-  subtitle: 'Rozwijaj swoje umiejętności',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TrainingScreen(
-          engine: engine,
-        ),
-      ),
-    ).then((_) {
-      // Odświeżymy ekran kariery po powrocie.
-      (context as Element).markNeedsBuild();
-    });
-  },
-),
+              icon: Icons.fitness_center,
+              title: 'TRENING',
+              subtitle: 'Rozwijaj swoje umiejętności',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TrainingScreen(
+                      engine: engine,
+                    ),
+                  ),
+                ).then((_) {
+                  (context as Element).markNeedsBuild();
+                });
+              },
+            ),
 
             _menuButton(
               icon: Icons.bar_chart,
@@ -310,8 +327,7 @@ class CareerHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
 
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
                     const Text(
@@ -368,8 +384,7 @@ class CareerHomeScreen extends StatelessWidget {
             alpha: 0.05,
           ),
 
-          borderRadius:
-              BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(10),
         ),
 
         child: Column(
@@ -409,8 +424,7 @@ class CareerHomeScreen extends StatelessWidget {
       ),
 
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 4,
         ),
