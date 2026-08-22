@@ -1,6 +1,6 @@
 import 'player.dart';
-
 import 'player_contract.dart';
+import 'player_match_stats.dart';
 
 class PlayerCareer {
   final String id;
@@ -40,9 +40,23 @@ class PlayerCareer {
 
   PlayerContract? contract;
 
+  // ==========================================================
+  // STATYSTYKI KARIERY
+  // ==========================================================
+
   int careerGoals;
   int careerAssists;
   int careerAppearances;
+
+  // ==========================================================
+  // STATYSTYKI MECZOWE
+  // ==========================================================
+
+  final PlayerMatchStats matchStats = PlayerMatchStats();
+
+  // ==========================================================
+  // KONSTRUKTOR
+  // ==========================================================
 
   PlayerCareer({
     required this.id,
@@ -73,9 +87,17 @@ class PlayerCareer {
     this.careerAppearances = 0,
   });
 
+  // ==========================================================
+  // PEŁNE IMIĘ I NAZWISKO
+  // ==========================================================
+
   String get fullName {
     return '$firstName $lastName';
   }
+
+  // ==========================================================
+  // OVR
+  // ==========================================================
 
   int calculateOverall() {
     switch (position) {
@@ -127,6 +149,10 @@ class PlayerCareer {
         ).round();
     }
   }
+
+  // ==========================================================
+  // ODŚWIEŻANIE OVR
+  // ==========================================================
 
   void refreshOverall() {
     overall = calculateOverall().clamp(1, 99);
