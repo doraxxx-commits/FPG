@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/game_engine.dart';
 import 'models/player.dart';
+import 'screens/create_player_screen.dart';
 
 void main() {
   runApp(const FPGApp());
@@ -187,6 +188,25 @@ class _FPGHomePageState extends State<FPGHomePage> {
             ),
 
             const SizedBox(height: 12),
+
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreatePlayerScreen(
+            engine: engine,
+          ),
+        ),
+      );
+    },
+    child: const Text(
+      'NOWA KARIERA',
+    ),
+  ),
+),
 
             // ==================================================
             // INFORMACJE O ZAWODNIKU
