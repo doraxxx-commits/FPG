@@ -52,6 +52,10 @@ class PlayerMatchStats {
     required bool started,
     required double rating,
   }) {
+    if (playedMinutes <= 0) {
+      return;
+    }
+
     appearances++;
 
     if (started) {
@@ -129,5 +133,103 @@ class PlayerMatchStats {
 
   void addRedCard() {
     redCards++;
+  }
+
+  // ==========================================================
+  // SKUTECZNOŚĆ STRZAŁÓW
+  // ==========================================================
+
+  double get shotAccuracy {
+    if (shots == 0) {
+      return 0.0;
+    }
+
+    return shotsOnTarget / shots;
+  }
+
+  // ==========================================================
+  // GOLE NA MECZ
+  // ==========================================================
+
+  double get goalsPerAppearance {
+    if (appearances == 0) {
+      return 0.0;
+    }
+
+    return goals / appearances;
+  }
+
+  // ==========================================================
+  // ASYSTY NA MECZ
+  // ==========================================================
+
+  double get assistsPerAppearance {
+    if (appearances == 0) {
+      return 0.0;
+    }
+
+    return assists / appearances;
+  }
+
+  // ==========================================================
+  // ŚREDNIA MINUT NA MECZ
+  // ==========================================================
+
+  double get averageMinutes {
+    if (appearances == 0) {
+      return 0.0;
+    }
+
+    return minutes / appearances;
+  }
+
+  // ==========================================================
+  // ŚREDNIA OCENA
+  // ==========================================================
+
+  double get rating {
+    return averageRating;
+  }
+
+  // ==========================================================
+  // ŁĄCZNY UDZIAŁ PRZY GOLACH
+  // ==========================================================
+
+  int get goalContributions {
+    return goals + assists;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK MA STATYSTYKI
+  // ==========================================================
+
+  bool get hasPlayed {
+    return appearances > 0;
+  }
+
+  // ==========================================================
+  // RESET STATYSTYK
+  // ==========================================================
+
+  void reset() {
+    appearances = 0;
+    starts = 0;
+    substituteAppearances = 0;
+
+    minutes = 0;
+
+    goals = 0;
+    assists = 0;
+
+    yellowCards = 0;
+    redCards = 0;
+
+    shots = 0;
+    shotsOnTarget = 0;
+
+    keyPasses = 0;
+    successfulDribbles = 0;
+
+    averageRating = 0.0;
   }
 }
