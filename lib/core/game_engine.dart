@@ -14,6 +14,7 @@ import '../simulation/aging_engine.dart';
 import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import '../simulation/match_engine.dart';
+import '../simulation/transfer_engine.dart';
 
 import 'game_state.dart';
 import 'training_engine.dart';
@@ -125,6 +126,14 @@ class GameEngine {
     updateCareerPlayerMatchStatus();
 
     playMatchesForToday();
+
+    // PODŁĄCZONO: Symulacja transferów AI w oknach transferowych
+    AITransferEngine.processAITransfers(
+      clubs: clubs,
+      players: players,
+      isSummerWindow: summerTransferWindow,
+      isWinterWindow: winterTransferWindow,
+    );
 
     // Sprawdzenie zakończenia sezonu
     if (leagueEngine.isSeasonComplete()) {
