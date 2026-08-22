@@ -37,8 +37,7 @@ class AgingEngine {
 
       // 3. LOGIKA STARZENIA (Po 30. roku życia)
       if (player.age >= 31) {
-        // Im wyższy OVR zawodnika, tym wolniejszy spadek (klasa światowa wolniej traci jakość)
-        final ovrFactor = (100 - player.overall) / 100.0; // np. dla OVR 97 -> 0.03 (znikomy spadek)
+        final ovrFactor = (100 - player.overall) / 100.0;
         final ageFactor = (player.age - 30) * 0.3;
         final totalDecline = ((ageFactor * ovrFactor) + (_rnd.nextDouble() * 0.5)).round().clamp(0, 3);
 
@@ -54,19 +53,15 @@ class AgingEngine {
         bool shouldRetire = false;
 
         if (player.age >= 48) {
-          // Automatyczna emerytura w wieku 48 lat
           shouldRetire = true;
         } else if (player.age >= 40) {
-          // Wysoka szansa na emeryturę po 40-tce
           shouldRetire = _rnd.nextDouble() < 0.40;
         } else if (player.age >= 36) {
-          // Umiarkowana szansa (bramkarze i gwiazdy grają dłużej)
           final isGK = player.position == PlayerPosition.goalkeeper;
           final isStar = player.overall >= 82;
           final baseChance = (isGK || isStar) ? 0.08 : 0.20;
           shouldRetire = _rnd.nextDouble() < baseChance;
         } else if (player.age >= 32) {
-          // Bardzo mała szansa (tylko w przypadku niskiego OVR < 60)
           if (player.overall < 60) {
             shouldRetire = _rnd.nextDouble() < 0.10;
           }
@@ -90,13 +85,13 @@ class AgingEngine {
   static Player _generateRegen(String? clubId, PlayerPosition position) {
     final fName = _firstNames[_rnd.nextInt(_firstNames.length)];
     final lName = _lastNames[_rnd.nextInt(_lastNames.length)];
-    final baseStat = 58 + _rnd.nextInt(14); // OVR początkowe 58-72
+    final baseStat = 58 + _rnd.nextInt(14);
 
     return Player(
       id: 'regen_${DateTime.now().millisecondsSinceEpoch}_${_rnd.nextInt(9999)}',
       firstName: fName,
       lastName: lName,
-      age: 17 + _rnd.nextInt(3), // Wiek 17-19 lat
+      age: 17 + _rnd.nextInt(3),
       position: position,
       overall: baseStat,
       potential: baseStat + 12 + _rnd.nextInt(10),
