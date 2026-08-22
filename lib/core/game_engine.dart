@@ -112,6 +112,10 @@ class GameEngine {
 
     updatePlayerForm();
 
+    // KROK 30:
+    // Trener podejmuje decyzję o statusie zawodnika.
+    updateCareerPlayerMatchStatus();
+
     playMatchesForToday();
   }
 
@@ -200,6 +204,9 @@ class GameEngine {
 
     player.refreshOverall();
 
+    // Dobry trening wpływa na zaufanie trenera.
+    player.rewardTrainingTrust();
+
     return result;
   }
 
@@ -256,6 +263,40 @@ class GameEngine {
   }
 
   // ==========================================================
+  // KROK 30
+  // DECYZJA TRENERA O STATUSIE ZAWODNIKA
+  // ==========================================================
+
+  void updateCareerPlayerMatchStatus() {
+    if (careerPlayer == null) {
+      return;
+    }
+
+    final player = careerPlayer!;
+
+    // Jeżeli zawodnik nie ma klubu,
+    // nie może być wybierany do kadry.
+    if (player.clubId == null) {
+      player.inMatchSquad = false;
+      player.isStarter = false;
+      player.squadStatus = 'Bez klubu';
+      return;
+    }
+
+    // Trener aktualizuje status na podstawie:
+    // - zaufania,
+    // - kondycji,
+    // - zmęczenia.
+    player.updateMatchStatus();
+
+    // Jeżeli zawodnik nie może zagrać,
+    // nie może być podstawowym zawodnikiem.
+    if (!player.canPlayMatch) {
+      player.isStarter = false;
+    }
+  }
+
+  // ==========================================================
   // PRZYPISANIE DO KLUBU
   // ==========================================================
 
@@ -279,6 +320,12 @@ class GameEngine {
     // Numer zawodnika
     player.shirtNumber = 27;
 
+    // Początkowe zaufanie trenera.
+    player.managerRelationship = 50;
+
+    // Początkowy status zawodnika.
+    player.updateMatchStatus();
+
     final marketValue =
         calculateStartingMarketValue(
       player,
@@ -297,8 +344,8 @@ class GameEngine {
       weeklySalary: salary,
       marketValue: marketValue,
       squadNumber: player.shirtNumber,
-      squadStatus: 'Młody zawodnik',
-      managerTrust: 50,
+      squadStatus: player.squadStatus,
+      managerTrust: player.managerRelationship,
     );
   }
 
