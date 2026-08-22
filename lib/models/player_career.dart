@@ -395,7 +395,7 @@ class PlayerCareer {
     decreaseManagerTrust(1);
   }
 
-    // ==========================================================
+  // ==========================================================
   // DECYZJA TRENERA PRZED MECZEM
   // ==========================================================
 
@@ -491,5 +491,251 @@ class PlayerCareer {
     } else {
       isStarter = false;
     }
+  }
+
+  // ==========================================================
+  // WYSTĘP W MECZU
+  // ==========================================================
+  //
+  // Ta metoda obsługuje cały występ zawodnika:
+  //
+  // - minuty,
+  // - ocenę,
+  // - gole,
+  // - asysty,
+  // - zmęczenie,
+  // - kondycję,
+  // - formę.
+  //
+  // Dzięki temu GameEngine nie musi osobno wykonywać
+  // kilkunastu operacji po każdym meczu.
+  // ==========================================================
+
+  void processMatchPerformance({
+    required int minutes,
+    required bool started,
+    required double rating,
+    int goals = 0,
+    int assists = 0,
+  }) {
+    // ----------------------------------------------------------
+    // ZABEZPIECZENIA
+    // ----------------------------------------------------------
+
+    if (minutes < 0) {
+      minutes = 0;
+    }
+
+    if (minutes > 120) {
+      minutes = 120;
+    }
+
+    if (rating < 0) {
+      rating = 0;
+    }
+
+    if (rating > 10) {
+      rating = 10;
+    }
+
+    if (goals < 0) {
+      goals = 0;
+    }
+
+    if (assists < 0) {
+      assists = 0;
+    }
+
+    // ----------------------------------------------------------
+    // JEŻELI NIE ZAGRAŁ
+    // ----------------------------------------------------------
+
+    if (minutes == 0) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // WYSTĘP
+    // ----------------------------------------------------------
+
+    addCareerAppearance(
+      minutes: minutes,
+      started: started,
+      rating: rating,
+    );
+
+    // ----------------------------------------------------------
+    // GOLE
+    // ----------------------------------------------------------
+
+    for (int i = 0; i < goals; i++) {
+      addCareerGoal();
+    }
+
+    // ----------------------------------------------------------
+    // ASYSTY
+    // ----------------------------------------------------------
+
+    for (int i = 0; i < assists; i++) {
+      addCareerAssist();
+    }
+
+    // ----------------------------------------------------------
+    // ZMĘCZENIE PO MECZU
+    // ----------------------------------------------------------
+
+    int fatigueIncrease;
+
+    if (minutes >= 90) {
+      fatigueIncrease = 18;
+    } else if (minutes >= 60) {
+      fatigueIncrease = 13;
+    } else if (minutes >= 30) {
+      fatigueIncrease = 8;
+    } else {
+      fatigueIncrease = 4;
+    }
+
+    // Wysoka intensywność przy słabej kondycji
+    // powoduje dodatkowe zmęczenie.
+    if (fitness <= 50) {
+      fatigueIncrease += 3;
+    }
+
+    fatigue = (
+      fatigue + fatigueIncrease
+    ).clamp(0, 100);
+
+    // ----------------------------------------------------------
+    // KONDYCJA PO MECZU
+    // ----------------------------------------------------------
+
+    int fitnessLoss;
+
+    if (minutes >= 90) {
+      fitnessLoss = 15;
+    } else if (minutes >= 60) {
+      fitnessLoss = 10;
+    } else if (minutes >= 30) {
+      fitnessLoss = 6;
+    } else {
+      fitnessLoss = 3;
+    }
+
+    fitness = (
+      fitness - fitnessLoss
+    ).clamp(0, 100);
+
+    // ----------------------------------------------------------
+    // FORMA
+    // ----------------------------------------------------------
+
+    if (rating >= 8.0) {
+      form = (
+        form + 3
+      ).clamp(0, 100);
+    } else if (rating >= 7.0) {
+      form = (
+        form + 2
+      ).clamp(0, 100);
+    } else if (rating >= 6.0) {
+      form = (
+        form + 1
+      ).clamp(0, 100);
+    } else if (rating < 5.5) {
+      form = (
+        form - 2
+      ).clamp(0, 100);
+    } else if (rating < 6.0) {
+      form = (
+        form - 1
+      ).clamp(0, 100);
+    }
+
+    // ----------------------------------------------------------
+    // DODATKOWA MOTYWACJA ZA GOLE I ASYSTY
+    // ----------------------------------------------------------
+
+    if (goals > 0) {
+      morale = (
+        morale + goals
+      ).clamp(0, 100);
+
+      happiness = (
+        happiness + goals
+      ).clamp(0, 100);
+    }
+
+    if (assists > 0) {
+      morale = (
+        morale + assists
+      ).clamp(0, 100);
+
+      happiness = (
+        happiness + assists
+      ).clamp(0, 100);
+    }
+
+    // ----------------------------------------------------------
+    // DOŚWIADCZENIE
+    // ----------------------------------------------------------
+
+    int experienceGain = 5;
+
+    if (started) {
+      experienceGain += 3;
+    }
+
+    if (minutes >= 60) {
+      experienceGain += 3;
+    }
+
+    if (rating >= 7.0) {
+      experienceGain += 4;
+    }
+
+    if (goals > 0) {
+      experienceGain += goals * 3;
+    }
+
+    if (assists > 0) {
+      experienceGain += assists * 2;
+    }
+
+    addExperience(experienceGain);
+  }
+
+  // ==========================================================
+  // DOŚWIADCZENIE
+  // ==========================================================
+
+  void addExperience(int amount) {
+    if (amount <= 0) {
+      return;
+    }
+
+    experience += amount;
+
+    while (experience >= experienceToNextLevel) {
+      experience -= experienceToNextLevel;
+
+      experienceToNextLevel = (
+        experienceToNextLevel * 1.15
+      ).round();
+
+      if (experienceToNextLevel < 100) {
+        experienceToNextLevel = 100;
+      }
+    }
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK JEST GOTOWY DO MECZU
+  // ==========================================================
+
+  bool get isMatchReady {
+    return canPlayMatch &&
+        fitness > 20 &&
+        fatigue < 95;
   }
 }
