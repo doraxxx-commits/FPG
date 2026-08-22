@@ -51,6 +51,9 @@ class PlayerCareer {
   int managerRelationship;
   int teamRelationship;
 
+  int experience;
+  int experienceToNextLevel;
+
   // ==========================================================
   // KLUB / KONTRAKT
   // ==========================================================
@@ -106,6 +109,8 @@ class PlayerCareer {
 
     this.managerRelationship = 50,
     this.teamRelationship = 50,
+    this.experience = 0,
+    this.experienceToNextLevel = 100,
 
     this.clubId,
 
