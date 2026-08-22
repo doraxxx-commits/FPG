@@ -8,6 +8,7 @@ import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import '../simulation/match_engine.dart';
 import 'game_state.dart';
+import '../models/player_career.dart';
 
 class GameEngine {
   final GameState state;
@@ -21,6 +22,47 @@ class GameEngine {
 
   late final List<Fixture> fixtures;
 
+  late final List<Fixture> fixtures;
+
+  PlayerCareer? careerPlayer;
+
+  void createPlayer({
+  required String firstName,
+  required String lastName,
+  required String nationality,
+  required int age,
+  required int height,
+  required PlayerPosition position,
+  required int pace,
+  required int shooting,
+  required int passing,
+  required int dribbling,
+  required int defending,
+  required int physical,
+}) {
+  final player = PlayerCareer(
+    id: 'career_player_001',
+    firstName: firstName,
+    lastName: lastName,
+    nationality: nationality,
+    age: age,
+    height: height,
+    position: position,
+    overall: 1,
+    potential: 85,
+    pace: pace,
+    shooting: shooting,
+    passing: passing,
+    dribbling: dribbling,
+    defending: defending,
+    physical: physical,
+  );
+
+  player.refreshOverall();
+
+  careerPlayer = player;
+}
+  
   GameEngine({
     GameState? state,
   }) : state = state ?? GameState() {
