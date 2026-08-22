@@ -34,30 +34,42 @@ class FPGHomePage extends StatefulWidget {
 class _FPGHomePageState extends State<FPGHomePage> {
   final GameEngine engine = GameEngine();
 
+  // ============================================================
+  // TESTOWY ZAWODNIK
+  // ============================================================
+
   void createTestPlayer() {
-  setState(() {
-    engine.createPlayer(
-      firstName: 'Dominik',
-      lastName: 'Nowak',
-      nationality: 'Polska',
-      age: 18,
-      height: 178,
-      position: PlayerPosition.winger,
-      pace: 82,
-      shooting: 70,
-      passing: 68,
-      dribbling: 84,
-      defending: 35,
-      physical: 65,
-    );
-  });
-}
-  
+    setState(() {
+      engine.createPlayer(
+        firstName: 'Dominik',
+        lastName: 'Nowak',
+        nationality: 'Polska',
+        age: 18,
+        height: 178,
+        position: PlayerPosition.winger,
+        pace: 82,
+        shooting: 70,
+        passing: 68,
+        dribbling: 84,
+        defending: 35,
+        physical: 65,
+      );
+    });
+  }
+
+  // ============================================================
+  // CZAS GRY
+  // ============================================================
+
   void nextDay() {
     setState(() {
       engine.advanceDay();
     });
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -66,16 +78,28 @@ class _FPGHomePageState extends State<FPGHomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFF080A0F),
 
+      // ========================================================
+      // APP BAR
+      // ========================================================
+
       appBar: AppBar(
         title: const Text('FPG'),
         backgroundColor: const Color(0xFF080A0F),
       ),
+
+      // ========================================================
+      // BODY
+      // ========================================================
 
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
 
           children: [
+            // ==================================================
+            // LOGO
+            // ==================================================
+
             const Text(
               'FPG',
               style: TextStyle(
@@ -97,7 +121,10 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
-            // SEZON
+            // ==================================================
+            // INFORMACJE O SEZONIE
+            // ==================================================
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -143,7 +170,98 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
-            // DZISIAJ
+            // ==================================================
+            // TESTOWY ZAWODNIK
+            // ==================================================
+
+            SizedBox(
+              width: double.infinity,
+
+              child: ElevatedButton(
+                onPressed: createTestPlayer,
+
+                child: const Text(
+                  'STWÓRZ ZAWODNIKA TESTOWEGO',
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ==================================================
+            // INFORMACJE O ZAWODNIKU
+            // ==================================================
+
+            if (engine.careerPlayer != null)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      Text(
+                        engine.careerPlayer!.fullName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'OVR ${engine.careerPlayer!.overall}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        'Wiek: ${engine.careerPlayer!.age}',
+                      ),
+
+                      Text(
+                        'Wzrost: '
+                        '${engine.careerPlayer!.height} cm',
+                      ),
+
+                      Text(
+                        'Potencjał: '
+                        '${engine.careerPlayer!.potential}',
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        'PACE ${engine.careerPlayer!.pace}  •  '
+                        'SHO ${engine.careerPlayer!.shooting}',
+                      ),
+
+                      Text(
+                        'PAS ${engine.careerPlayer!.passing}  •  '
+                        'DRI ${engine.careerPlayer!.dribbling}',
+                      ),
+
+                      Text(
+                        'DEF ${engine.careerPlayer!.defending}  •  '
+                        'PHY ${engine.careerPlayer!.physical}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // ==================================================
+            // DZISIEJSZE MECZE
+            // ==================================================
+
             const Text(
               'DZISIAJ',
               style: TextStyle(
@@ -194,7 +312,10 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
+            // ==================================================
             // NASTĘPNE MECZE
+            // ==================================================
+
             const Text(
               'NASTĘPNE MECZE',
               style: TextStyle(
@@ -231,7 +352,10 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
-            // TABELA
+            // ==================================================
+            // TABELA EKSTRAKLASY
+            // ==================================================
+
             const Text(
               'EKSTRAKLASA',
               style: TextStyle(
@@ -273,7 +397,6 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
                   trailing: Text(
                     '${standing.points} pkt',
-
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
