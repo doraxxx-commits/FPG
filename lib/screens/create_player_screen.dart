@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
 import '../models/player.dart';
-import 'club_selection_screen.dart';
 
 class CreatePlayerScreen extends StatefulWidget {
   final GameEngine engine;
@@ -13,103 +12,101 @@ class CreatePlayerScreen extends StatefulWidget {
   });
 
   @override
-  State<CreatePlayerScreen> createState() => _CreatePlayerScreenState();
+  State<CreatePlayerScreen> createState() =>
+      _CreatePlayerScreenState();
 }
 
-class _CreatePlayerScreenState extends State<CreatePlayerScreen> {
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final heightController = TextEditingController(text: '178');
+class _CreatePlayerScreenState
+    extends State<CreatePlayerScreen> {
+  final _formKey = GlobalKey<FormState>();
 
-  String nationality = 'Polska';
-  int age = 18;
+  final firstNameController =
+      TextEditingController();
 
-  PlayerPosition position = PlayerPosition.winger;
+  final lastNameController =
+      TextEditingController();
 
-  int pace = 70;
-  int shooting = 65;
-  int passing = 65;
-  int dribbling = 70;
-  int defending = 40;
-  int physical = 60;
+  final nationalityController =
+      TextEditingController(
+    text: 'Polska',
+  );
+
+  final heightController =
+      TextEditingController(
+    text: '178',
+  );
+
+  final ageController =
+      TextEditingController(
+    text: '18',
+  );
+
+  PlayerPosition selectedPosition =
+      PlayerPosition.winger;
 
   @override
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
+    nationalityController.dispose();
     heightController.dispose();
+    ageController.dispose();
+
     super.dispose();
   }
 
+  // ==========================================================
+  // UTWORZENIE ZAWODNIKA
+  // ==========================================================
+
   void createPlayer() {
-  final firstName = firstNameController.text.trim();
-  final lastName = lastNameController.text.trim();
-
-  final height = int.tryParse(
-    heightController.text.trim(),
-  );
-
-  if (firstName.isEmpty ||
-      lastName.isEmpty ||
-      height == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Uzupełnij imię, nazwisko i prawidłowy wzrost.',
-        ),
-      ),
-    );
-
-    return;
-  }
-
-  widget.engine.createPlayer(
-    firstName: firstName,
-    lastName: lastName,
-    nationality: nationality,
-    age: age,
-    height: height,
-    position: position,
-    pace: pace,
-    shooting: shooting,
-    passing: passing,
-    dribbling: dribbling,
-    defending: defending,
-    physical: physical,
-  );
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ClubSelectionScreen(
-        engine: widget.engine,
-      ),
-    ),
-  );
-}
-
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
+    final age =
+        int.parse(ageController.text);
+
+    final height =
+        int.parse(heightController.text);
+
     widget.engine.createPlayer(
-      firstName: firstName,
-      lastName: lastName,
-      nationality: nationality,
+      firstName:
+          firstNameController.text.trim(),
+
+      lastName:
+          lastNameController.text.trim(),
+
+      nationality:
+          nationalityController.text.trim(),
+
       age: age,
+
       height: height,
-      position: position,
-      pace: pace,
-      shooting: shooting,
-      passing: passing,
-      dribbling: dribbling,
-      defending: defending,
-      physical: physical,
+
+      position:
+          selectedPosition,
+
+      // Na tym etapie bazowe statystyki
+      // generujemy automatycznie.
+      pace: 60,
+      shooting: 60,
+      passing: 60,
+      dribbling: 60,
+      defending: 60,
+      physical: 60,
     );
 
     Navigator.pop(context);
   }
 
-  String positionName(PlayerPosition position) {
+  // ==========================================================
+  // NAZWA POZYCJI
+  // ==========================================================
+
+  String positionName(
+    PlayerPosition position,
+  ) {
     switch (position) {
       case PlayerPosition.goalkeeper:
         return 'BRAMKARZ';
@@ -128,278 +125,342 @@ class _CreatePlayerScreenState extends State<CreatePlayerScreen> {
     }
   }
 
-  Widget statSlider({
-    required String name,
-    required int value,
-    required ValueChanged<double> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(name),
-            Text(
-              '$value',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        Slider(
-          min: 1,
-          max: 99,
-          value: value.toDouble(),
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080A0F),
+      backgroundColor:
+          const Color(0xFF080A0F),
+
       appBar: AppBar(
-        title: const Text('NOWA KARIERA'),
-        backgroundColor: const Color(0xFF080A0F),
+        title: const Text(
+          'NOWA KARIERA',
+        ),
+        backgroundColor:
+            const Color(0xFF080A0F),
       ),
+
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const Text(
-              'STWÓRZ ZAWODNIKA',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
+        child: Form(
+          key: _formKey,
+
+          child: ListView(
+            padding:
+                const EdgeInsets.all(16),
+
+            children: [
+              // ==================================================
+              // NAGŁÓWEK
+              // ==================================================
+
+              const Text(
+                'STWÓRZ ZAWODNIKA',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight:
+                      FontWeight.w900,
+                  letterSpacing: 1,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 6),
+              const SizedBox(height: 6),
 
-            const Text(
-              'Rozpocznij swoją piłkarską karierę.',
-              style: TextStyle(
-                color: Colors.white54,
+              const Text(
+                'Rozpocznij swoją piłkarską karierę.',
+                style: TextStyle(
+                  color: Colors.white54,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            TextField(
-              controller: firstNameController,
-              decoration: const InputDecoration(
-                labelText: 'Imię',
-                border: OutlineInputBorder(),
+              // ==================================================
+              // IMIĘ
+              // ==================================================
+
+              TextFormField(
+                controller:
+                    firstNameController,
+
+                decoration:
+                    const InputDecoration(
+                  labelText: 'Imię',
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(Icons.person),
+                ),
+
+                validator: (value) {
+                  if (value == null ||
+                      value.trim().isEmpty) {
+                    return 'Wpisz imię.';
+                  }
+
+                  if (value.trim().length <
+                      2) {
+                    return 'Imię jest za krótkie.';
+                  }
+
+                  return null;
+                },
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-            TextField(
-              controller: lastNameController,
-              decoration: const InputDecoration(
-                labelText: 'Nazwisko',
-                border: OutlineInputBorder(),
+              // ==================================================
+              // NAZWISKO
+              // ==================================================
+
+              TextFormField(
+                controller:
+                    lastNameController,
+
+                decoration:
+                    const InputDecoration(
+                  labelText: 'Nazwisko',
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(Icons.badge),
+                ),
+
+                validator: (value) {
+                  if (value == null ||
+                      value.trim().isEmpty) {
+                    return 'Wpisz nazwisko.';
+                  }
+
+                  if (value.trim().length <
+                      2) {
+                    return 'Nazwisko jest za krótkie.';
+                  }
+
+                  return null;
+                },
               ),
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-            DropdownButtonFormField<String>(
-              initialValue: nationality,
-              decoration: const InputDecoration(
-                labelText: 'Narodowość',
-                border: OutlineInputBorder(),
+              // ==================================================
+              // NARODOWOŚĆ
+              // ==================================================
+
+              TextFormField(
+                controller:
+                    nationalityController,
+
+                decoration:
+                    const InputDecoration(
+                  labelText: 'Narodowość',
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(Icons.flag),
+                ),
+
+                validator: (value) {
+                  if (value == null ||
+                      value.trim().isEmpty) {
+                    return 'Wpisz narodowość.';
+                  }
+
+                  return null;
+                },
               ),
-              items: const [
-                'Polska',
-                'Niemcy',
-                'Hiszpania',
-                'Anglia',
-                'Francja',
-                'Włochy',
-                'Brazylia',
-                'Argentyna',
-              ].map((country) {
-                return DropdownMenuItem(
-                  value: country,
-                  child: Text(country),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
+
+              const SizedBox(height: 14),
+
+              // ==================================================
+              // WIEK
+              // ==================================================
+
+              TextFormField(
+                controller:
+                    ageController,
+
+                keyboardType:
+                    TextInputType.number,
+
+                decoration:
+                    const InputDecoration(
+                  labelText: 'Wiek',
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(Icons.cake),
+                ),
+
+                validator: (value) {
+                  final age =
+                      int.tryParse(
+                    value ?? '',
+                  );
+
+                  if (age == null) {
+                    return 'Wpisz prawidłowy wiek.';
+                  }
+
+                  if (age < 16 ||
+                      age > 35) {
+                    return 'Wiek musi być od 16 do 35 lat.';
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 14),
+
+              // ==================================================
+              // WZROST
+              // ==================================================
+
+              TextFormField(
+                controller:
+                    heightController,
+
+                keyboardType:
+                    TextInputType.number,
+
+                decoration:
+                    const InputDecoration(
+                  labelText: 'Wzrost (cm)',
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(Icons.height),
+                ),
+
+                validator: (value) {
+                  final height =
+                      int.tryParse(
+                    value ?? '',
+                  );
+
+                  if (height == null) {
+                    return 'Wpisz prawidłowy wzrost.';
+                  }
+
+                  if (height < 150 ||
+                      height > 220) {
+                    return 'Wzrost musi być od 150 do 220 cm.';
+                  }
+
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // ==================================================
+              // POZYCJA
+              // ==================================================
+
+              const Text(
+                'POZYCJA',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              DropdownButtonFormField<
+                  PlayerPosition>(
+                initialValue:
+                    selectedPosition,
+
+                decoration:
+                    const InputDecoration(
+                  border:
+                      OutlineInputBorder(),
+                  prefixIcon:
+                      Icon(
+                    Icons.sports_soccer,
+                  ),
+                ),
+
+                items: PlayerPosition
+                    .values
+                    .map(
+                      (position) {
+                        return DropdownMenuItem<
+                            PlayerPosition>(
+                          value: position,
+
+                          child: Text(
+                            positionName(
+                              position,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                    .toList(),
+
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+
                   setState(() {
-                    nationality = value;
+                    selectedPosition =
+                        value;
                   });
-                }
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            DropdownButtonFormField<int>(
-              initialValue: age,
-              decoration: const InputDecoration(
-                labelText: 'Wiek',
-                border: OutlineInputBorder(),
+                },
               ),
-              items: List.generate(
-                13,
-                (index) => 16 + index,
-              ).map((value) {
-                return DropdownMenuItem(
-                  value: value,
-                  child: Text('$value lat'),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    age = value;
-                  });
-                }
-              },
-            ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 30),
 
-            TextField(
-              controller: heightController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Wzrost',
-                suffixText: 'cm',
-                border: OutlineInputBorder(),
-              ),
-            ),
+              // ==================================================
+              // START KARIERY
+              // ==================================================
 
-            const SizedBox(height: 20),
+              SizedBox(
+                width:
+                    double.infinity,
 
-            const Text(
-              'POZYCJA',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                height: 54,
 
-            const SizedBox(height: 8),
+                child:
+                    ElevatedButton.icon(
+                  onPressed:
+                      createPlayer,
 
-            DropdownButtonFormField<PlayerPosition>(
-              initialValue: position,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              items: PlayerPosition.values.map((value) {
-                return DropdownMenuItem(
-                  value: value,
-                  child: Text(positionName(value)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    position = value;
-                  });
-                }
-              },
-            ),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                  ),
 
-            const SizedBox(height: 24),
-
-            const Text(
-              'STATYSTYKI STARTOWE',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            statSlider(
-              name: 'PACE',
-              value: pace,
-              onChanged: (value) {
-                setState(() {
-                  pace = value.round();
-                });
-              },
-            ),
-
-            statSlider(
-              name: 'SHOOTING',
-              value: shooting,
-              onChanged: (value) {
-                setState(() {
-                  shooting = value.round();
-                });
-              },
-            ),
-
-            statSlider(
-              name: 'PASSING',
-              value: passing,
-              onChanged: (value) {
-                setState(() {
-                  passing = value.round();
-                });
-              },
-            ),
-
-            statSlider(
-              name: 'DRIBBLING',
-              value: dribbling,
-              onChanged: (value) {
-                setState(() {
-                  dribbling = value.round();
-                });
-              },
-            ),
-
-            statSlider(
-              name: 'DEFENDING',
-              value: defending,
-              onChanged: (value) {
-                setState(() {
-                  defending = value.round();
-                });
-              },
-            ),
-
-            statSlider(
-              name: 'PHYSICAL',
-              value: physical,
-              onChanged: (value) {
-                setState(() {
-                  physical = value.round();
-                });
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: createPlayer,
-                child: const Text(
-                  'UTWÓRZ ZAWODNIKA',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  label: const Text(
+                    'ROZPOCZNIJ KARIERĘ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 12),
+
+              const Text(
+                'Twój zawodnik rozpocznie karierę '
+                'z podstawowymi statystykami. '
+                'Rozwój będzie zależał od treningów, '
+                'meczów, formy oraz decyzji w trakcie kariery.',
+                textAlign:
+                    TextAlign.center,
+
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
