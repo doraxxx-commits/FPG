@@ -48,6 +48,10 @@ class PlayerCareer {
   int morale;
   int happiness;
 
+  // ==========================================================
+  // ZAUFANIE TRENERA / RELACJE
+  // ==========================================================
+
   int managerRelationship;
   int teamRelationship;
 
@@ -125,7 +129,7 @@ class PlayerCareer {
     this.morale = 75,
     this.happiness = 75,
 
-    // Relacje
+    // Zaufanie trenera
     this.managerRelationship = 50,
     this.teamRelationship = 50,
 
@@ -137,7 +141,7 @@ class PlayerCareer {
     this.clubId,
     this.shirtNumber = 1,
 
-    // Status w kadrze
+    // Status
     this.squadStatus = 'Młody zawodnik',
     this.inMatchSquad = false,
     this.isStarter = false,
@@ -226,6 +230,89 @@ class PlayerCareer {
   }
 
   // ==========================================================
+  // ZAUFANIE TRENERA
+  // ==========================================================
+
+  void increaseManagerTrust(int amount) {
+    if (amount <= 0) {
+      return;
+    }
+
+    managerRelationship =
+        (managerRelationship + amount).clamp(0, 100);
+
+    _updateSquadStatusFromTrust();
+  }
+
+  void decreaseManagerTrust(int amount) {
+    if (amount <= 0) {
+      return;
+    }
+
+    managerRelationship =
+        (managerRelationship - amount).clamp(0, 100);
+
+    _updateSquadStatusFromTrust();
+  }
+
+  // ==========================================================
+  // POZIOM ZAUFANIA TRENERA
+  // ==========================================================
+
+  String get managerTrustLevel {
+    if (managerRelationship <= 20) {
+      return 'Brak zaufania';
+    }
+
+    if (managerRelationship <= 40) {
+      return 'Niskie zaufanie';
+    }
+
+    if (managerRelationship <= 60) {
+      return 'Normalne zaufanie';
+    }
+
+    if (managerRelationship <= 80) {
+      return 'Duże zaufanie';
+    }
+
+    return 'Kluczowy zawodnik';
+  }
+
+  // ==========================================================
+  // STATUS ZAWODNIKA NA PODSTAWIE ZAUFANIA
+  // ==========================================================
+
+  void _updateSquadStatusFromTrust() {
+    if (managerRelationship <= 20) {
+      squadStatus = 'Poza planami trenera';
+      inMatchSquad = false;
+      isStarter = false;
+      return;
+    }
+
+    if (managerRelationship <= 40) {
+      squadStatus = 'Rezerwowy';
+      isStarter = false;
+      return;
+    }
+
+    if (managerRelationship <= 60) {
+      squadStatus = 'Rotacja';
+      isStarter = false;
+      return;
+    }
+
+    if (managerRelationship <= 80) {
+      squadStatus = 'Podstawowy zawodnik';
+      return;
+    }
+
+    squadStatus = 'Kluczowy zawodnik';
+    isStarter = true;
+  }
+
+  // ==========================================================
   // DODANIE GOLA DO KARIERY
   // ==========================================================
 
@@ -233,6 +320,9 @@ class PlayerCareer {
     careerGoals++;
 
     matchStats.addGoal();
+
+    // Dobry wpływ na zaufanie trenera.
+    increaseManagerTrust(3);
   }
 
   // ==========================================================
@@ -243,6 +333,9 @@ class PlayerCareer {
     careerAssists++;
 
     matchStats.addAssist();
+
+    // Dobry wpływ na zaufanie trenera.
+    increaseManagerTrust(2);
   }
 
   // ==========================================================
@@ -261,5 +354,44 @@ class PlayerCareer {
       started: started,
       rating: rating,
     );
+
+    // Występ od pierwszej minuty daje mały bonus.
+    if (started) {
+      increaseManagerTrust(1);
+    }
+
+    // Dobra ocena = większe zaufanie.
+    if (rating >= 7.0) {
+      increaseManagerTrust(2);
+    }
+
+    if (rating >= 8.0) {
+      increaseManagerTrust(2);
+    }
+
+    // Bardzo słaby występ = utrata zaufania.
+    if (rating < 5.5) {
+      decreaseManagerTrust(2);
+    }
+
+    if (rating < 5.0) {
+      decreaseManagerTrust(2);
+    }
+  }
+
+  // ==========================================================
+  // ZAUFANIE ZA TRENING
+  // ==========================================================
+
+  void rewardTrainingTrust() {
+    increaseManagerTrust(1);
+  }
+
+  // ==========================================================
+  // KARA ZA OPUSZCZENIE TRENINGU / ZŁĄ FORMĘ
+  // ==========================================================
+
+  void penalizeTrainingTrust() {
+    decreaseManagerTrust(1);
   }
 }
