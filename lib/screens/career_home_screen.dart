@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../core/game_engine.dart';
 import '../database/save_manager.dart';
 import 'league_table_screen.dart';
+import 'manager_screen.dart';
 import 'match_screen.dart';
+import 'news_screen.dart';
 import 'player_development_screen.dart';
 import 'training_screen.dart';
 
@@ -330,7 +332,18 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.person,
               title: 'TRENER',
               subtitle: 'Zaufanie i relacja z trenerem',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ManagerScreen(
+                      engine: engine,
+                    ),
+                  ),
+                ).then((_) {
+                  (context as Element).markNeedsBuild();
+                });
+              },
             ),
 
             _menuButton(
@@ -344,7 +357,16 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.newspaper,
               title: 'FPG NEWS',
               subtitle: 'Plotki, informacje i transfery',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NewsScreen(
+                      engine: engine,
+                    ),
+                  ),
+                );
+              },
             ),
 
             _menuButton(
