@@ -1,40 +1,38 @@
-name: Build FPG APK
+name: Build Android APK
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-      - name: Setup Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.35.0"
-          channel: stable
+          channel: 'stable'
 
-      - name: Create Flutter project
-        run: |
-          flutter create . \
-            --project-name fpg \
-            --org com.memmor.fpg \
-            --platforms android
-
-      - name: Get dependencies
+      - name: Install Dependencies
         run: flutter pub get
+
+      - name: Analyze Code
+        run: flutter analyze || true
 
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FPG-APK
+          name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
