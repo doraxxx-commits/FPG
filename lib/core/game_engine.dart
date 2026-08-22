@@ -1,7 +1,9 @@
 import '../data/world_data.dart';
 import '../models/club.dart';
+import '../models/fixture.dart';
 import '../models/league.dart';
 import '../models/player.dart';
+import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
 import 'game_state.dart';
 
@@ -14,6 +16,8 @@ class GameEngine {
 
   late final LeagueEngine leagueEngine;
 
+  late final List<Fixture> fixtures;
+
   GameEngine({
     GameState? state,
   }) : state = state ?? GameState() {
@@ -21,8 +25,16 @@ class GameEngine {
     clubs = WorldData.clubs;
     players = WorldData.players;
 
+    final leagueClubs = clubs.where(
+      (club) => club.leagueId == 'pol_ek',
+    ).toList();
+
     leagueEngine = LeagueEngine(
-      clubs: clubs,
+      clubs: leagueClubs,
+    );
+
+    fixtures = FixtureGenerator.generateDoubleRoundRobin(
+      leagueClubs,
     );
   }
 
@@ -47,8 +59,14 @@ class GameEngine {
   }
 
   List<Club> get leagueClubs {
-    return clubs.where((club) {
-      return club.leagueId == 'pol_ek';
-    }).toList();
+    return clubs.where(
+      (club) => club.leagueId == 'pol_ek',
+    ).toList();
+  }
+
+  List<Fixture> get roundOneFixtures {
+    return fixtures.where(
+      (fixture) => fixture.round == 1,
+    ).toList();
   }
 }
