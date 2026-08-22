@@ -110,6 +110,74 @@ class GameEngine {
     return;
   }
 
+  final club = clubs.firstWhere(
+    (club) => club.id == clubId,
+  );
+
+  careerPlayer!.clubId = clubId;
+
+  final marketValue = calculateStartingMarketValue(
+    careerPlayer!,
+    club,
+  );
+
+  final salary = calculateStartingSalary(
+    careerPlayer!,
+    club,
+  );
+
+  careerPlayer!.contract = PlayerContract(
+    clubId: club.id,
+    yearsRemaining: 3,
+    weeklySalary: salary,
+    marketValue: marketValue,
+    squadNumber: 27,
+    squadStatus: 'Młody zawodnik',
+    managerTrust: 50,
+  );
+}
+
+  double calculateStartingMarketValue(
+  PlayerCareer player,
+  Club club,
+) {
+  final ageFactor = player.age <= 21
+      ? 1.25
+      : player.age <= 25
+          ? 1.10
+          : 0.90;
+
+  final potentialFactor =
+      player.potential / 70;
+
+  final clubFactor =
+      club.overall / 70;
+
+  return 250000 *
+      player.overall *
+      ageFactor *
+      potentialFactor *
+      clubFactor;
+}
+
+  double calculateStartingSalary(
+  PlayerCareer player,
+  Club club,
+) {
+  final baseSalary = 150.0;
+
+  final overallFactor =
+      player.overall / 50;
+
+  final clubFactor =
+      club.overall / 70;
+
+  return baseSalary *
+      overallFactor *
+      clubFactor;
+}
+
+  
   careerPlayer!.clubId = clubId;
 }
 
