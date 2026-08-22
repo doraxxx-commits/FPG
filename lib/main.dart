@@ -41,50 +41,120 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final table = engine.leagueEngine.table;
+
     return Scaffold(
       backgroundColor: const Color(0xFF080A0F),
       appBar: AppBar(
         title: const Text('FPG'),
         backgroundColor: const Color(0xFF080A0F),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             const Text(
               'FPG',
               style: TextStyle(
-                fontSize: 56,
+                fontSize: 48,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 8,
+                letterSpacing: 6,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
 
-            Text(
-              'SEZON ${engine.currentSeason}',
-              style: const TextStyle(
-                fontSize: 18,
+            const Text(
+              'FOOTBALL PLAYER GAME',
+              style: TextStyle(
+                color: Colors.white54,
+                letterSpacing: 2,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SEZON ${engine.currentSeason}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    Text(
+                      engine.currentDate,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: nextDay,
+                        child: const Text('NASTĘPNY DZIEŃ'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'EKSTRAKLASA',
+              style: TextStyle(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
             const SizedBox(height: 10),
 
-            Text(
-              engine.currentDate,
-              style: const TextStyle(
-                fontSize: 24,
-              ),
-            ),
+            ...List.generate(table.length, (index) {
+              final standing = table[index];
 
-            const SizedBox(height: 40),
+              final club = engine.clubs.firstWhere(
+                (club) => club.id == standing.clubId,
+              );
 
-            ElevatedButton(
-              onPressed: nextDay,
-              child: const Text('NASTĘPNY DZIEŃ'),
-            ),
+              return Card(
+                child: ListTile(
+                  leading: SizedBox(
+                    width: 30,
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(club.name),
+                  subtitle: Text(
+                    'OVR ${club.overall}  •  '
+                    '${standing.played} meczów',
+                  ),
+                  trailing: Text(
+                    '${standing.points} pkt',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }),
           ],
         ),
       ),
