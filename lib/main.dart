@@ -39,19 +39,32 @@ class _FPGHomePageState extends State<FPGHomePage> {
     });
   }
 
+  void playFirstRound() {
+    setState(() {
+      for (final fixture in engine.roundOneFixtures) {
+        if (!fixture.played) {
+          engine.playFixture(fixture);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final table = engine.leagueEngine.table;
 
     return Scaffold(
       backgroundColor: const Color(0xFF080A0F),
+
       appBar: AppBar(
         title: const Text('FPG'),
         backgroundColor: const Color(0xFF080A0F),
       ),
+
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
+
           children: [
             const Text(
               'FPG',
@@ -74,11 +87,14 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
             const SizedBox(height: 24),
 
+            // INFORMACJE O SEZONIE
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+
                   children: [
                     Text(
                       'SEZON ${engine.currentSeason}',
@@ -101,9 +117,12 @@ class _FPGHomePageState extends State<FPGHomePage> {
 
                     SizedBox(
                       width: double.infinity,
+
                       child: ElevatedButton(
                         onPressed: nextDay,
-                        child: const Text('NASTĘPNY DZIEŃ'),
+                        child: const Text(
+                          'NASTĘPNY DZIEŃ',
+                        ),
                       ),
                     ),
                   ],
@@ -112,39 +131,98 @@ class _FPGHomePageState extends State<FPGHomePage> {
             ),
 
             const SizedBox(height: 20),
-const Text(
-  'NAJBLIŻSZA KOLEJKA',
-  style: TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-  ),
-),
 
-const SizedBox(height: 10),
+            // NAJBLIŻSZA KOLEJKA
+            const Text(
+              'NAJBLIŻSZA KOLEJKA',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
-...engine.roundOneFixtures.map((fixture) {
-  final home = engine.clubs.firstWhere(
-    (club) => club.id == fixture.homeClubId,
-  );
+            const SizedBox(height: 10),
 
-  final away = engine.clubs.firstWhere(
-    (club) => club.id == fixture.awayClubId,
-  );
+            ...engine.roundOneFixtures.map((fixture) {
+              final home = engine.clubs.firstWhere(
+                (club) => club.id == fixture.homeClubId,
+              );
 
-  return Card(
-    child: ListTile(
-      title: Text(
-        '${home.name}  vs  ${away.name}',
-      ),
-      subtitle: Text(
-        'Kolejka ${fixture.round}',
-      ),
-    ),
-  );
-}),
+              final away = engine.clubs.firstWhere(
+                (club) => club.id == fixture.awayClubId,
+              );
 
-const SizedBox(height: 20),
-            
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    '${home.name}  vs  ${away.name}',
+                  ),
+
+                  subtitle: Text(
+                    'Kolejka ${fixture.round}',
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 10),
+
+            // PRZYCISK ROZGRYWANIA KOLEJKI
+            SizedBox(
+              width: double.infinity,
+
+              child: ElevatedButton(
+                onPressed: playFirstRound,
+
+                child: const Text(
+                  'ROZEGRAJ KOLEJKĘ',
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // WYNIKI
+            const Text(
+              'WYNIKI KOLEJKI',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            ...engine.roundOneFixtures.map((fixture) {
+              final home = engine.clubs.firstWhere(
+                (club) => club.id == fixture.homeClubId,
+              );
+
+              final away = engine.clubs.firstWhere(
+                (club) => club.id == fixture.awayClubId,
+              );
+
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    '${home.name}  '
+                    '${fixture.homeGoals ?? '-'} : '
+                    '${fixture.awayGoals ?? '-'}  '
+                    '${away.name}',
+                  ),
+
+                  subtitle: Text(
+                    fixture.played
+                        ? 'Mecz zakończony'
+                        : 'Mecz jeszcze nierozgrany',
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 20),
+
+            // TABELA
             const Text(
               'EKSTRAKLASA',
               style: TextStyle(
@@ -166,6 +244,7 @@ const SizedBox(height: 20),
                 child: ListTile(
                   leading: SizedBox(
                     width: 30,
+
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
@@ -173,13 +252,19 @@ const SizedBox(height: 20),
                       ),
                     ),
                   ),
-                  title: Text(club.name),
+
+                  title: Text(
+                    club.name,
+                  ),
+
                   subtitle: Text(
                     'OVR ${club.overall}  •  '
                     '${standing.played} meczów',
                   ),
+
                   trailing: Text(
                     '${standing.points} pkt',
+
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
