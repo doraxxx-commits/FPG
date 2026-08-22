@@ -2,12 +2,12 @@ import '../data/world_data.dart';
 import '../models/club.dart';
 import '../models/fixture.dart';
 import '../models/league.dart';
+import '../models/match_result.dart';
 import '../models/player.dart';
 import '../simulation/fixture_generator.dart';
 import '../simulation/league_engine.dart';
-import 'game_state.dart';
-import '../models/match_result.dart';
 import '../simulation/match_engine.dart';
+import 'game_state.dart';
 
 class GameEngine {
   final GameState state;
@@ -15,9 +15,9 @@ class GameEngine {
   late final List<League> leagues;
   late final List<Club> clubs;
   late final List<Player> players;
-  late final MatchEngine matchEngine;
 
   late final LeagueEngine leagueEngine;
+  late final MatchEngine matchEngine;
 
   late final List<Fixture> fixtures;
 
@@ -36,42 +36,80 @@ class GameEngine {
       clubs: leagueClubs,
     );
 
+    matchEngine = MatchEngine();
+
     fixtures = FixtureGenerator.generateDoubleRoundRobin(
       leagueClubs,
     );
-    
-    matchEngine = MatchEngine();
-  
-   MatchResult playFixture(Fixture fixture) {
-   final home = clubs.firstWhere(
-     (club) => club.id == fixture.homeClubId,
-   );
+  }
 
-   final away = clubs.firstWhere(
-     (club) => club.id == fixture.awayClubId,
-   );
-
-   final result = matchEngine.simulate(
-     home: home,
-     away: away,
-   );
-
-   fixture.played = true;
-   fixture.homeGoals = result.homeGoals;
-   fixture.awayGoals = result.awayGoals;
-
-   leagueEngine.recordMatch(
-     homeClubId: result.homeClubId,
-     awayClubId: result.awayClubId,
-     homeGoals: result.homeGoals,
-     awayGoals: result.awayGoals,
-   );
-
-   return result;
- }
-  
   void advanceDay() {
     state.nextDay();
+
+    playMatchesForToday();
+  }
+
+  void playMatchesForToday() {
+    for (final fixture in fixtures) {
+      if (fixture.played) {
+        continue;
+      }
+
+      if (fixture.year == state.year &&
+          fixture.month == state.month &&
+          fixture.day == state.day) {
+        playFixture(fixture);
+      }
+    }
+  }
+
+  MatchResult playFixture(Fixture fixture) {
+    final home = clubs.firstWhere(
+      (club) => club.id == fixture.homeClubId,
+    );
+
+    final away = clubs.firstWhere(
+      (club) => club.id == fixture.awayClubId,
+    );
+
+    final result = matchEngine.simulate(
+      home: home,
+      away: away,
+    );
+
+    fixture.played = true;
+    fixture.homeGoals = result.homeGoals;
+    fixture.awayGoals = result.awayGoals;
+
+    leagueEngine.recordMatch(
+      homeClubId: result.homeClubId,
+      awayClubId: result.awayClubId,
+      homeGoals: result.homeGoals,
+      awayGoals: result.awayGoals,
+    );
+
+    return result;
+  }
+
+  List<Fixture> get todayFixtures {
+    return fixtures.where(
+      (fixture) =>
+          fixture.year == state.year &&
+          fixture.month == state.month &&
+          fixture.day == state.day,
+    ).toList();
+  }
+
+  List<Fixture> get playedFixtures {
+    return fixtures.where(
+      (fixture) => fixture.played,
+    ).toList();
+  }
+
+  List<Fixture> get upcomingFixtures {
+    return fixtures.where(
+      (fixture) => !fixture.played,
+    ).toList();
   }
 
   String get currentDate {
@@ -93,12 +131,6 @@ class GameEngine {
   List<Club> get leagueClubs {
     return clubs.where(
       (club) => club.leagueId == 'pol_ek',
-    ).toList();
-  }
-
-  List<Fixture> get roundOneFixtures {
-    return fixtures.where(
-      (fixture) => fixture.round == 1,
     ).toList();
   }
 }
