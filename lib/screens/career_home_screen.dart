@@ -8,6 +8,7 @@ import 'match_screen.dart';
 import 'news_screen.dart';
 import 'player_development_screen.dart';
 import 'training_screen.dart';
+import 'transfers_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
   final GameEngine engine;
@@ -350,7 +351,18 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.swap_horiz,
               title: 'TRANSFERY',
               subtitle: 'Transfery i wypożyczenia',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TransfersScreen(
+                      engine: engine,
+                    ),
+                  ),
+                ).then((_) {
+                  (context as Element).markNeedsBuild();
+                });
+              },
             ),
 
             _menuButton(
