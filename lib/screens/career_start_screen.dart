@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/game_engine.dart';
+import 'career_home_screen.dart';
 
 class CareerStartScreen extends StatelessWidget {
   final GameEngine engine;
@@ -163,11 +164,15 @@ class CareerStartScreen extends StatelessWidget {
 
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.popUntil(
-                    context,
-                    (route) => route.isFirst,
-                  );
-                },
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CareerHomeScreen(
+        engine: engine,
+      ),
+    ),
+  );
+},
 
                 child: const Text(
                   'ROZPOCZNIJ KARIERĘ',
