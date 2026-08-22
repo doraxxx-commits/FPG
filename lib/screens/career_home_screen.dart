@@ -8,6 +8,7 @@ import 'manager_screen.dart';
 import 'match_screen.dart';
 import 'news_screen.dart';
 import 'player_development_screen.dart';
+import 'team_screen.dart';
 import 'training_screen.dart';
 import 'transfers_screen.dart';
 
@@ -327,7 +328,18 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.groups,
               title: 'DRUŻYNA',
               subtitle: 'Relacje z zespołem',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TeamScreen(
+                      engine: engine,
+                    ),
+                  ),
+                ).then((_) {
+                  (context as Element).markNeedsBuild();
+                });
+              },
             ),
 
             _menuButton(
