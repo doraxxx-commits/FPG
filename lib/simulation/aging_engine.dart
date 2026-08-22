@@ -37,7 +37,7 @@ class AgingEngine {
 
       // 3. LOGIKA STARZENIA (Po 30. roku życia)
       if (player.age >= 31) {
-        // Czym wyższy OVR zawodnika, tym wolniejszy spadek (klasa światowa wolniej traci jakość)
+        // Im wyższy OVR zawodnika, tym wolniejszy spadek (klasa światowa wolniej traci jakość)
         final ovrFactor = (100 - player.overall) / 100.0; // np. dla OVR 97 -> 0.03 (znikomy spadek)
         final ageFactor = (player.age - 30) * 0.3;
         final totalDecline = ((ageFactor * ovrFactor) + (_rnd.nextDouble() * 0.5)).round().clamp(0, 3);
@@ -81,30 +81,33 @@ class AgingEngine {
     // 5. USUWANIE EMERYTÓW I GENEROWANIE REGENÓW
     for (final retired in retiredPlayers) {
       allPlayers.remove(retired);
-      final regen = _generateRegen(retired.clubId, retired.position, retired.name);
+      final regen = _generateRegen(retired.clubId, retired.position);
       allPlayers.add(regen);
     }
   }
 
   // Generowanie nowego młodego zawodnika (Regen)
-  static Player _generateRegen(String clubId, PlayerPosition position, String originalName) {
+  static Player _generateRegen(String? clubId, PlayerPosition position) {
     final fName = _firstNames[_rnd.nextInt(_firstNames.length)];
     final lName = _lastNames[_rnd.nextInt(_lastNames.length)];
     final baseStat = 58 + _rnd.nextInt(14); // OVR początkowe 58-72
 
     return Player(
       id: 'regen_${DateTime.now().millisecondsSinceEpoch}_${_rnd.nextInt(9999)}',
-      name: '$fName $lName',
+      firstName: fName,
+      lastName: lName,
       age: 17 + _rnd.nextInt(3), // Wiek 17-19 lat
       position: position,
-      pace: baseStat + _rnd.nextInt(8) - 4,
-      shooting: baseStat + _rnd.nextInt(8) - 4,
-      passing: baseStat + _rnd.nextInt(8) - 4,
-      dribbling: baseStat + _rnd.nextInt(8) - 4,
-      defending: baseStat + _rnd.nextInt(8) - 4,
-      physical: baseStat + _rnd.nextInt(8) - 4,
-      value: (baseStat * 18000),
-      weeklyWage: (baseStat * 140),
+      overall: baseStat,
+      potential: baseStat + 12 + _rnd.nextInt(10),
+      pace: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      shooting: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      passing: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      dribbling: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      defending: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      physical: (baseStat + _rnd.nextInt(8) - 4).clamp(1, 99),
+      value: (baseStat * 18000).toDouble(),
+      weeklyWage: (baseStat * 140).toDouble(),
       clubId: clubId,
     );
   }
