@@ -20,15 +20,6 @@ class MatchEngine {
     required Club away,
 
     // Opcjonalne składy zawodników.
-    //
-    // Dzięki temu stary kod nadal działa:
-    //
-    // simulate(
-    //   home: home,
-    //   away: away,
-    // );
-    //
-    // a później możemy przekazać prawdziwych zawodników.
     List<PlayerCareer> homePlayers = const [],
     List<PlayerCareer> awayPlayers = const [],
   }) {
@@ -115,16 +106,6 @@ class MatchEngine {
     final performances =
         <PlayerMatchPerformance>[];
 
-    // ========================================================
-    // USTALENIE LICZBY ZAWODNIKÓW
-    // ========================================================
-    //
-    // Nie zakładamy tutaj jeszcze pełnej kadry 25-30 osób.
-    //
-    // System wybiera maksymalnie 11 zawodników
-    // do podstawowego składu.
-    // ========================================================
-
     final availablePlayers =
         List<PlayerCareer>.from(players);
 
@@ -170,10 +151,7 @@ class MatchEngine {
     }
 
     // ========================================================
-    // REZERWOWI
-    // ========================================================
-    //
-    // Część zawodników może wejść z ławki.
+    // REZERWOWY
     // ========================================================
 
     final substitutes =
@@ -183,7 +161,6 @@ class MatchEngine {
             .toList();
 
     for (final player in substitutes) {
-      // Około 45% rezerwowych dostaje minuty.
       final enters =
           _random.nextDouble() < 0.45;
 
@@ -228,10 +205,6 @@ class MatchEngine {
     // ========================================================
     // ROZDZIELENIE GOLI
     // ========================================================
-    //
-    // Jeżeli drużyna zdobyła gole, przypisujemy je zawodnikom,
-    // którzy faktycznie wystąpili.
-    // ========================================================
 
     _assignGoals(
       performances: performances,
@@ -268,8 +241,6 @@ class MatchEngine {
   int _generateStarterMinutes(
     PlayerCareer player,
   ) {
-    // Jeżeli zawodnik jest bardzo zmęczony,
-    // może zostać wcześniej zdjęty.
     if (player.fatigue >= 80) {
       return randomInt(55, 80);
     }
@@ -278,7 +249,6 @@ class MatchEngine {
       return randomInt(60, 85);
     }
 
-    // Standardowy występ.
     return randomInt(80, 95);
   }
 
@@ -294,30 +264,14 @@ class MatchEngine {
   }) {
     double rating = 6.0;
 
-    // ----------------------------------------------------------
-    // OVR
-    // ----------------------------------------------------------
-
     rating +=
         (player.overall - 60) * 0.025;
-
-    // ----------------------------------------------------------
-    // FORMA
-    // ----------------------------------------------------------
 
     rating +=
         (player.form - 70) * 0.015;
 
-    // ----------------------------------------------------------
-    // KONDYCJA
-    // ----------------------------------------------------------
-
     rating +=
         (player.fitness - 70) * 0.01;
-
-    // ----------------------------------------------------------
-    // WYNIK DRUŻYNY
-    // ----------------------------------------------------------
 
     if (teamWon) {
       rating += 0.45;
@@ -327,16 +281,8 @@ class MatchEngine {
       rating -= 0.30;
     }
 
-    // ----------------------------------------------------------
-    // LOSOWOŚĆ
-    // ----------------------------------------------------------
-
     rating +=
         randomDouble(-0.65, 0.65);
-
-    // ----------------------------------------------------------
-    // KRÓTKI WYSTĘP
-    // ----------------------------------------------------------
 
     if (minutes < 30) {
       rating -= 0.15;
@@ -366,8 +312,6 @@ class MatchEngine {
         continue;
       }
 
-      // Tworzymy nowy obiekt, ponieważ pola
-      // PlayerMatchPerformance są finalne.
       final index =
           performances.indexOf(player);
 
@@ -417,7 +361,6 @@ class MatchEngine {
       return null;
     }
 
-    // Preferujemy zawodników ofensywnych.
     final weightedPlayers =
         <PlayerMatchPerformance>[];
 
@@ -448,7 +391,6 @@ class MatchEngine {
     }
 
     for (int i = 0; i < goals; i++) {
-      // Około 75% goli ma asystę.
       if (_random.nextDouble() > 0.75) {
         continue;
       }
@@ -539,26 +481,16 @@ class MatchEngine {
       ),
     );
 
-    // Losowa żółta kartka.
     final yellow =
         _random.nextDouble() < 0.12
             ? 1
             : 0;
 
-    // Czerwona kartka jest znacznie rzadsza.
     final red =
         _random.nextDouble() < 0.015
             ? 1
             : 0;
 
-    // Nie możemy zmienić istniejącego obiektu,
-    // dlatego na tym etapie dane dodatkowe są już
-    // przygotowane przez pomocniczą metodę.
-    //
-    // W kolejnym kroku zostaną bezpośrednio zapisane
-    // do statystyk kariery zawodnika.
-
-    // Zapobiega ostrzeżeniom analizatora dla lokalnych danych.
     if (shots < 0 ||
         shotsOnTarget < 0 ||
         keyPasses < 0 ||
@@ -570,7 +502,7 @@ class MatchEngine {
   }
 
   // ==========================================================
-  // SIŁA DRUŻYNY
+  // SIŁA DRUŻYNA
   // ==========================================================
 
   double _calculateStrength(
@@ -580,27 +512,15 @@ class MatchEngine {
     double strength =
         club.overall.toDouble();
 
-    // ----------------------------------------------------------
-    // PRZEWAGA WŁASNEGO STADIONU
-    // ----------------------------------------------------------
-
     if (home) {
       strength += 3;
     }
-
-    // ----------------------------------------------------------
-    // FINANSE I REPUTACJA
-    // ----------------------------------------------------------
 
     strength +=
         club.financialHealth * 0.02;
 
     strength +=
         club.reputation * 0.01;
-
-    // ----------------------------------------------------------
-    // LOSOWOŚĆ MECZU
-    // ----------------------------------------------------------
 
     strength +=
         _random.nextDouble() * 8 - 4;
@@ -622,25 +542,13 @@ class MatchEngine {
     final chance =
         _random.nextDouble();
 
-    // ----------------------------------------------------------
-    // 0 GOLI
-    // ----------------------------------------------------------
-
     if (chance < 0.10) {
       return 0;
     }
 
-    // ----------------------------------------------------------
-    // 0-1 GOLA
-    // ----------------------------------------------------------
-
     if (chance < 0.35) {
       return normalized > 1.5 ? 1 : 0;
     }
-
-    // ----------------------------------------------------------
-    // 0-3 GOLE
-    // ----------------------------------------------------------
 
     if (chance < 0.75) {
       return normalized
@@ -648,19 +556,11 @@ class MatchEngine {
           .clamp(0, 3);
     }
 
-    // ----------------------------------------------------------
-    // 0-4 GOLE
-    // ----------------------------------------------------------
-
     if (chance < 0.95) {
       return (normalized + 1)
           .round()
           .clamp(0, 4);
     }
-
-    // ----------------------------------------------------------
-    // 0-5 GOLE
-    // ----------------------------------------------------------
 
     return (normalized + 2)
         .round()
