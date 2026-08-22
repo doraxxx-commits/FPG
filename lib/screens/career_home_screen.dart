@@ -4,6 +4,7 @@ import '../core/game_engine.dart';
 import '../database/save_manager.dart';
 import 'league_table_screen.dart';
 import 'match_screen.dart';
+import 'player_development_screen.dart';
 import 'training_screen.dart';
 
 class CareerHomeScreen extends StatelessWidget {
@@ -306,7 +307,16 @@ class CareerHomeScreen extends StatelessWidget {
               icon: Icons.auto_graph,
               title: 'ROZWÓJ',
               subtitle: 'OVR, potencjał i perki',
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PlayerDevelopmentScreen(
+                      engine: engine,
+                    ),
+                  ),
+                );
+              },
             ),
 
             _menuButton(
