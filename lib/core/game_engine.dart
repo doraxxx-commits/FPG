@@ -42,9 +42,11 @@ class GameEngine {
     clubs = WorldData.clubs;
     players = WorldData.players;
 
-    final leagueClubs = clubs.where(
-      (club) => club.leagueId == 'pol_ek',
-    ).toList();
+    final leagueClubs = clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
 
     leagueEngine = LeagueEngine(
       clubs: leagueClubs,
@@ -405,5 +407,33 @@ class GameEngine {
     return clubs.where(
       (club) => club.leagueId == 'pol_ek',
     ).toList();
+  }
+
+  // ==========================================================
+  // KLUBY DOSTĘPNE NA START KARIERY
+  // ==========================================================
+
+  List<Club> get careerStartClubs {
+    return clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
+  }
+
+  // ==========================================================
+  // WYBÓR KLUBU NA START KARIERY
+  // ==========================================================
+
+  void startCareerAtClub(
+    String clubId,
+  ) {
+    if (careerPlayer == null) {
+      throw StateError(
+        'Najpierw utwórz zawodnika.',
+      );
+    }
+
+    assignPlayerToClub(clubId);
   }
 }
