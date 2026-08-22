@@ -205,20 +205,26 @@ class GameEngine {
   // ==========================================================
 
   void recoverPlayer() {
-    if (careerPlayer == null) {
-      return;
-    }
-
-    final player = careerPlayer!;
-
-    player.fatigue =
-        (player.fatigue - 8)
-            .clamp(0, 100);
-
-    player.fitness =
-        (player.fitness + 8)
-            .clamp(0, 100);
+  if (careerPlayer == null) {
+    return;
   }
+
+  final player = careerPlayer!;
+
+  final recovery = player.fatigue >= 70
+      ? 5
+      : player.fatigue >= 40
+          ? 8
+          : 10;
+
+  player.fatigue =
+      (player.fatigue - recovery)
+          .clamp(0, 100);
+
+  player.fitness =
+      (player.fitness + recovery)
+          .clamp(0, 100);
+}
 
   // ==========================================================
   // PRZYPISANIE DO KLUBU
