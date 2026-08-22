@@ -54,7 +54,8 @@ class GameEngine {
 
     matchEngine = MatchEngine();
 
-    fixtures = FixtureGenerator.generateDoubleRoundRobin(
+    fixtures =
+        FixtureGenerator.generateDoubleRoundRobin(
       leagueClubs,
     );
   }
@@ -262,33 +263,40 @@ class GameEngine {
     String clubId,
   ) {
     if (careerPlayer == null) {
-      return;
+      throw StateError(
+        'Najpierw utwórz zawodnika.',
+      );
     }
 
     final club = clubs.firstWhere(
       (club) => club.id == clubId,
     );
 
-    careerPlayer!.clubId = clubId;
+    final player = careerPlayer!;
+
+    player.clubId = clubId;
+
+    // Numer zawodnika
+    player.shirtNumber = 27;
 
     final marketValue =
         calculateStartingMarketValue(
-      careerPlayer!,
+      player,
       club,
     );
 
     final salary =
         calculateStartingSalary(
-      careerPlayer!,
+      player,
       club,
     );
 
-    careerPlayer!.contract = PlayerContract(
+    player.contract = PlayerContract(
       clubId: club.id,
       yearsRemaining: 3,
       weeklySalary: salary,
       marketValue: marketValue,
-      squadNumber: 27,
+      squadNumber: player.shirtNumber,
       squadStatus: 'Młody zawodnik',
       managerTrust: 50,
     );
@@ -404,9 +412,11 @@ class GameEngine {
   // ==========================================================
 
   List<Club> get leagueClubs {
-    return clubs.where(
-      (club) => club.leagueId == 'pol_ek',
-    ).toList();
+    return clubs
+        .where(
+          (club) => club.leagueId == 'pol_ek',
+        )
+        .toList();
   }
 
   // ==========================================================
@@ -435,5 +445,37 @@ class GameEngine {
     }
 
     assignPlayerToClub(clubId);
+  }
+
+  // ==========================================================
+  // AKTUALNY KLUB ZAWODNIKA
+  // ==========================================================
+
+  Club? get careerClub {
+    if (careerPlayer == null) {
+      return null;
+    }
+
+    final clubId = careerPlayer!.clubId;
+
+    if (clubId == null) {
+      return null;
+    }
+
+    for (final club in clubs) {
+      if (club.id == clubId) {
+        return club;
+      }
+    }
+
+    return null;
+  }
+
+  // ==========================================================
+  // CZY ZAWODNIK MA KLUB
+  // ==========================================================
+
+  bool get hasCareerClub {
+    return careerPlayer?.clubId != null;
   }
 }
