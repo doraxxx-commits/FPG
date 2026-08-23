@@ -11,7 +11,13 @@ class LeagueEngine {
     _initialize();
   }
 
+  // ==========================================================
+  // INICJALIZACJA TABELI
+  // ==========================================================
+
   void _initialize() {
+    standings.clear();
+
     for (final club in clubs) {
       standings[club.id] = Standing(
         clubId: club.id,
@@ -19,23 +25,39 @@ class LeagueEngine {
     }
   }
 
+  // ==========================================================
+  // TABELA LIGOWA
+  // ==========================================================
+
   List<Standing> get table {
     final result = standings.values.toList();
 
     result.sort((a, b) {
+      // 1. Punkty
       if (a.points != b.points) {
         return b.points.compareTo(a.points);
       }
 
+      // 2. Bilans bramkowy
       if (a.goalDifference != b.goalDifference) {
         return b.goalDifference.compareTo(a.goalDifference);
       }
 
-      return b.goalsFor.compareTo(a.goalsFor);
+      // 3. Bramki strzelone
+      if (a.goalsFor != b.goalsFor) {
+        return b.goalsFor.compareTo(a.goalsFor);
+      }
+
+      // 4. Liczba zwycięstw
+      return b.wins.compareTo(a.wins);
     });
 
     return result;
   }
+
+  // ==========================================================
+  // DODANIE WYNIKU MECZU
+  // ==========================================================
 
   void recordMatch({
     required String homeClubId,
@@ -50,15 +72,18 @@ class LeagueEngine {
       return;
     }
 
+    // Mecze rozegrane
     home.played++;
     away.played++;
 
+    // Bramki
     home.goalsFor += homeGoals;
     home.goalsAgainst += awayGoals;
 
     away.goalsFor += awayGoals;
     away.goalsAgainst += homeGoals;
 
+    // Wynik
     if (homeGoals > awayGoals) {
       home.wins++;
       away.losses++;
@@ -69,5 +94,41 @@ class LeagueEngine {
       home.draws++;
       away.draws++;
     }
+  }
+
+  // ==========================================================
+  // SPRAWDZENIE KOŃCA SEZONU
+  // ==========================================================
+
+  bool isSeasonComplete() {
+    if (clubs.isEmpty) {
+      return false;
+    }
+
+    // Dla ligi każdy klub powinien rozegrać:
+    // (liczba klubów - 1) * 2 meczów.
+    final requiredMatches = (clubs.length - 1) * 2;
+
+    for (final club in clubs) {
+      final standing = standings[club.id];
+
+      if (standing == null) {
+        return false;
+      }
+
+      if (standing.played < requiredMatches) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // ==========================================================
+  // RESET SEZONU
+  // ==========================================================
+
+  void resetSeason() {
+    _initialize();
   }
 }
