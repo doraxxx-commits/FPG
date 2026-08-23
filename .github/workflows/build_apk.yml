@@ -25,25 +25,11 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build APK & Capture Error Log
-        run: |
-          flutter build apk --release > build_output.log 2>&1 || true
+      - name: Create Missing Android Files
+        run: flutter create . --platforms=android
 
-      - name: Extract Clear Error
-        if: always()
-        run: |
-          echo "=== PODSUMOWANIE BŁĘDU ===" > error_log.txt
-          grep -i -E "error|failure|exception|failed" build_output.log | tail -n 40 >> error_log.txt || true
-          echo "" >> error_log.txt
-          echo "=== OSTATNIE 60 LINIJEK LOGU ===" >> error_log.txt
-          tail -n 60 build_output.log >> error_log.txt
-
-      - name: Upload Error Log (If Failed)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: error-log-txt
-          path: error_log.txt
+      - name: Build APK
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
